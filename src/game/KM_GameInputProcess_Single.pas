@@ -53,6 +53,12 @@ begin
       else
         myRand := Cardinal(KaMRandom(MaxInt, 'TKMGameInputProcess_Single.ReplayTimer 2'));
       ExecCommand(fQueue[fCursor].Command); //Should always be called to maintain randoms flow
+
+      if SKIP_RNG_CHECKS_FOR_SOME_GIC and (fQueue[fCursor].Command.CommandType in SKIP_RANDOM_CHECKS_FOR) then
+      begin
+        Inc(fCursor);
+        Continue;
+      end;
       //CRC check after the command
       if (fQueue[fCursor].Rand <> myRand)
         and not gGame.IgnoreConsistencyCheckErrors then
