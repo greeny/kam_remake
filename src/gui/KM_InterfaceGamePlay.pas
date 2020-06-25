@@ -4194,10 +4194,26 @@ end;
 
 
 procedure TKMGamePlayInterface.UpdateSelectedObject;
+
+  procedure HideUnitHousePage;
+  begin
+    if fGuiGameHouse.Visible then
+      fGuiGameHouse.Hide;
+    if fGuiGameUnit.Visible then
+      fGuiGameUnit.Hide;
+  end;
+  
 var
   updateNewSelected: Boolean;
 begin
+  if gMySpectator.Selected = nil then
+  begin
+    HideUnitHousePage;
+    Exit;
+  end; 
+  
   updateNewSelected := False;
+  
   // Update unit/house information
   if gMySpectator.Selected is TKMUnitGroup then
   begin
@@ -4221,10 +4237,7 @@ begin
       updateNewSelected := True;
     end
     else
-      if fGuiGameHouse.Visible then
-        fGuiGameHouse.Hide;
-      if fGuiGameUnit.Visible then
-        fGuiGameUnit.Hide;
+      HideUnitHousePage;
   end;
 
   if updateNewSelected then
