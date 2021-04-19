@@ -800,7 +800,7 @@ procedure TKMUnitGroup.CheckForFight;
 var
   I,K: Integer;
   U: TKMUnit;
-  FightWasOrdered: Boolean;
+  FightWasOrdered, alreadyAttacking: Boolean;
 begin
   //Verify we still have foes
   for I := fOffenders.Count - 1 downto 0 do
@@ -845,7 +845,23 @@ begin
     //Idle members should help their comrades
     for I := 0 to Count - 1 do
     if not Members[I].InFight then
-      Members[I].OrderWalk(TKMUnitWarrior(fOffenders[KaMRandom(fOffenders.Count, 'TKMUnitGroup.CheckForFight')]).NextPosition, False);
+    begin
+      alreadyAttacking := False;
+
+      // Check if this member already attacking some of the offenders. He could be not in fight, but just walking towards enemy
+      for K := 0 to fOffenders.Count - 1 do
+        if Members[I].IsAttackingUnit(fOffenders[K]) then
+        begin
+          alreadyAttacking := True;
+          Break;
+        end;
+
+
+      if alreadyAttacking then
+        Continue;
+
+      Members[I].OrderWalkToUnit(TKMUnitWarrior(fOffenders[KaMRandom(fOffenders.Count, 'TKMUnitGroup.CheckForFight')]), False);
+    end;
   end;
 end;
 
@@ -1298,6 +1314,9 @@ begin
     //Walk in formation towards enemy,
     //Members will take care of attack when we approach
     OrderWalk(aUnit.NextPosition, False, wtokNone, dirNA, aForced);
+
+    for I := 0 to Count - 1 do
+      Members[I].SetOrderTargetUnit(aUnit);
 
     //Revert Order to proper one (we disguise Walk)
     SetGroupOrder(goAttackUnit);

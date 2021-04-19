@@ -1,0 +1,8 @@
+var
+  Un: Integer;
+
+procedure OnMissionStart;
+begin
+  Un := S.UnitAt(57, 66);
+  A.UnitHPSetInvulnerable(Un, True);
+end;

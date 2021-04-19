@@ -83,6 +83,7 @@ type
     procedure OrderNone;
     procedure OrderStorm(aDelay: Word; aForced: Boolean = True);
     procedure OrderWalk(const aLoc: TKMPoint; aUseExactTarget: Boolean = True; aForced: Boolean = True);
+    procedure OrderWalkToUnit(aUnit: TKMUnit; aUseExactTarget: Boolean = True; aForced: Boolean = True);
     procedure OrderAttackHouse(aTargetHouse: TKMHouse; aForced: Boolean = True);
     procedure OrderFight(aTargetUnit: TKMUnit);
 
@@ -112,6 +113,10 @@ type
     function CheckForEnemy: Boolean;
     function FindEnemy: TKMUnit;
     function PathfindingShouldAvoid: Boolean; override;
+
+    function IsAttackingUnit(aUnit: TKMUnit): Boolean;
+
+    procedure SetOrderTargetUnit(aUnit: TKMUnit);
 
     procedure WalkedOut;
 
@@ -430,6 +435,20 @@ begin
 end;
 
 
+function TKMUnitWarrior.IsAttackingUnit(aUnit: TKMUnit): Boolean;
+begin
+  if (Self = nil) or (aUnit = nil) then Exit(False);
+  
+  Result := aUnit = fOrderTargetUnit;
+end;
+
+
+procedure TKMUnitWarrior.SetOrderTargetUnit(aUnit: TKMUnit);
+begin
+  SetOrderTarget(aUnit);
+end;
+
+
 function TKMUnitWarrior.IsRanged: Boolean;
 begin
   Result := gRes.Units[fType].FightType = ftRanged;
@@ -522,6 +541,18 @@ begin
   fOrderLoc := aLoc;
   fUseExactTarget := aUseExactTarget;
 end;
+
+
+procedure TKMUnitWarrior.OrderWalkToUnit(aUnit: TKMUnit; aUseExactTarget: Boolean = True; aForced: Boolean = True);
+begin
+  SetOrderTarget(aUnit);
+
+  fNextOrder := woWalk;
+  fNextOrderForced := aForced;
+  fOrderLoc := aUnit.NextPosition;
+  fUseExactTarget := aUseExactTarget;
+end;
+
 
 
 function TKMUnitWarrior.OrderDone: Boolean;
