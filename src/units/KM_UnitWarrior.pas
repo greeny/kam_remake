@@ -70,6 +70,8 @@ type
     procedure CloseUnit(aRemoveTileUsage: Boolean = True); override;
     destructor Destroy; override;
 
+    function GetPointer: TKMUnitWarrior; reintroduce;
+
     property Group: pointer read fGroup; // Property for GetGroupByMember function
     procedure SetGroup(aGroup: Pointer); // This procedure should not be called by anyone except UnitGroups class(it is out of property)
 
@@ -133,7 +135,7 @@ type
 
 implementation
 uses
-  TypInfo,
+  TypInfo, Generics.Collections,
   KM_ResTexts, KM_HandsCollection, KM_RenderPool, KM_UnitTaskAttackHouse, KM_HandLogistics,
   KM_UnitActionFight, KM_UnitActionGoInOut, KM_UnitActionWalkTo, KM_UnitActionStay,
   KM_UnitActionStormAttack, KM_Resource, KM_ResUnits, KM_Hand, KM_UnitGroup,
@@ -225,6 +227,12 @@ begin
   gHands.CleanUpGroupPointer( TKMUnitGroup(fGroup) );
 
   inherited;
+end;
+
+
+function TKMUnitWarrior.GetPointer: TKMUnitWarrior;
+begin
+  Result := TKMUnitWarrior(inherited GetPointer);
 end;
 
 
@@ -458,14 +466,14 @@ end;
 function TKMUnitWarrior.FindLinkUnit(const aLoc: TKMPoint): TKMUnitWarrior;
 var
   I: Integer;
-  foundUnits: TList;
+  foundUnits: TList<TKMUnit>;
   U: TKMUnit;
   best, L: Single;
 begin
   Result := nil;
   best := MaxSingle;
 
-  foundUnits := TList.Create;
+  foundUnits := TList<TKMUnit>.Create;
   gHands[Owner].Units.GetUnitsInRect(KMRect(aLoc.X - LINK_RADIUS,
                                             aLoc.Y - LINK_RADIUS,
                                             aLoc.X + LINK_RADIUS,

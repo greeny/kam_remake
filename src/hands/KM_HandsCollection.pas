@@ -2,7 +2,7 @@ unit KM_HandsCollection;
 {$I KaM_Remake.inc}
 interface
 uses
-  Classes, Math,
+  Classes, Math, Generics.Collections,
   KM_Hand, KM_HandSpectator, KM_HouseCollection,
   KM_Houses, KM_ResHouses, KM_Units, KM_UnitGroup, KM_UnitWarrior,
   KM_CommonClasses, KM_CommonTypes, KM_Defaults, KM_Points,
@@ -62,9 +62,9 @@ type
     function GetHousesInRadius(const aLoc: TKMPoint; aSqrRadius: Single; aIndex: TKMHandID; aAlliance: TKMAllianceType; aTypes: THouseTypeSet = [HOUSE_MIN..HOUSE_MAX]; aOnlyCompleted: Boolean = True): TKMHouseArray;
     function DistanceToEnemyTowers(const aLoc: TKMPoint; aIndex: TKMHandID): Single;
 
-    procedure GetUnitsInRect(const aRect: TKMRect; List: TList);
-    procedure GetGroupsInRect(const aRect: TKMRect; List: TList);
-    procedure GetHousesInRect(const aRect: TKMRect; List: TList);
+    procedure GetUnitsInRect(const aRect: TKMRect; List: TList<TKMUnit>);
+    procedure GetGroupsInRect(const aRect: TKMRect; List: TList<TKMUnitGroup>);
+    procedure GetHousesInRect(const aRect: TKMRect; List: TList<TKMHouse>);
 
     function GetHouseByUID(aUID: Integer): TKMHouse;
     function GetUnitByUID(aUID: Integer): TKMUnit;
@@ -756,7 +756,7 @@ begin
 end;
 
 
-procedure TKMHandsCollection.GetUnitsInRect(const aRect: TKMRect; List: TList);
+procedure TKMHandsCollection.GetUnitsInRect(const aRect: TKMRect; List: TList<TKMUnit>);
 var
   I: Integer;
 begin
@@ -767,7 +767,7 @@ begin
 end;
 
 
-procedure TKMHandsCollection.GetGroupsInRect(const aRect: TKMRect; List: TList);
+procedure TKMHandsCollection.GetGroupsInRect(const aRect: TKMRect; List: TList<TKMUnitGroup>);
 var
   I: Integer;
 begin
@@ -778,7 +778,7 @@ begin
 end;
 
 
-procedure TKMHandsCollection.GetHousesInRect(const aRect: TKMRect; List: TList);
+procedure TKMHandsCollection.GetHousesInRect(const aRect: TKMRect; List: TList<TKMHouse>);
 var
   I: Integer;
 begin
