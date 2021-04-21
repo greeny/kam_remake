@@ -23,11 +23,12 @@ type
     constructor Create;
     destructor Destroy; override;
 
-    function GetDir: string;
     function GetPath: string;
 
     procedure ReloadSettings;
     procedure SaveSettings(aForce: Boolean = False);
+
+    class function GetDir: string;
   end;
 
 
@@ -67,10 +68,10 @@ begin
 end;
 
 
-function TKMSettings.GetDir: string;
+class function TKMSettings.GetDir: string;
 begin
   {$IFDEF LINUX_DEDI_SERVER}
-  Result := ExeDir; // Use executable dir for a linux dedicated server
+  Result := ExtractFilePath(ParamStr(0)); // Use executable dir for a linux dedicated server
   {$ELSE}
   Result := GetDocumentsSavePath; // Use %My documents%/My Games/
   {$ENDIF}

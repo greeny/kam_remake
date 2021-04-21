@@ -27,7 +27,7 @@ uses
   KM_FileIO,
   KM_Game,
   KM_Log, KM_ResTexts, KM_Defaults, KM_Points,
-  KM_CommonExceptions;
+  KM_CommonExceptions, KM_Settings;
 
 
 { TKMExceptions }
@@ -131,7 +131,7 @@ begin
   if gLog <> nil then ExceptIntf.AdditionalAttachments.Add(gLog.LogPath, '', CrashFile);
 
   //Do settings here not in fGame because we could crash before fGame is created
-  settingsSavePath := GetDocumentsSavePath;
+  settingsSavePath := TKMSettings.GetDir;
   if FileExists(settingsSavePath + SETTINGS_FILE) then
     ExceptIntf.AdditionalAttachments.Add(settingsSavePath + SETTINGS_FILE, '', CrashFile);
 

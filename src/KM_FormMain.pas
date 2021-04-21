@@ -156,26 +156,7 @@ type
     chkShowHouses: TCheckBox;
     chkShowObjects: TCheckBox;
     chkShowFlatTerrain: TCheckBox;
-    {$ENDIF}
-    {$IFDEF FPC}
-    mainGroup: TGroupBox;
-    GroupBox2: TGroupBox;
-    GroupBox3: TGroupBox;
-    GroupBox4: TGroupBox;
-    GroupBox5: TGroupBox;
-    GroupBoxLogs: TGroupBox;
-    {$ENDIF}
-    N5: TMenuItem;
-    LoadSavThenRpl: TMenuItem;
-    N7: TMenuItem;
-    ReloadLibx: TMenuItem;
-    N8: TMenuItem;
-    N10: TMenuItem;
-    N9: TMenuItem;
-    Debug_UnlockCmpMissions: TMenuItem;
-    N11: TMenuItem;
-    mnExportRngChecks: TMenuItem;
-    chkGIP: TCheckBox;
+
     sePauseBeforeTick: TSpinEdit;
     Label8: TLabel;
     Label9: TLabel;
@@ -209,6 +190,27 @@ type
     tbWaterLight: TTrackBar;
     lblWaterLight: TLabel;
     chkSkipRenderText: TCheckBox;
+    {$ENDIF}
+    {$IFDEF FPC}
+    mainGroup: TGroupBox;
+    GroupBox2: TGroupBox;
+    GroupBox3: TGroupBox;
+    GroupBox4: TGroupBox;
+    GroupBox5: TGroupBox;
+    GroupBoxLogs: TGroupBox;
+    {$ENDIF}
+    N5: TMenuItem;
+    LoadSavThenRpl: TMenuItem;
+    N7: TMenuItem;
+    ReloadLibx: TMenuItem;
+    N8: TMenuItem;
+    N10: TMenuItem;
+    N9: TMenuItem;
+    Debug_UnlockCmpMissions: TMenuItem;
+    N11: TMenuItem;
+    mnExportRngChecks: TMenuItem;
+    chkGIP: TCheckBox;
+
 
     procedure FormCreate(Sender: TObject);
     procedure FormShow(Sender: TObject);
