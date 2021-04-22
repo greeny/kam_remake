@@ -329,7 +329,7 @@ begin
   //If the target unit has died then return nil
   //Don't clear fOrderTargetUnit here, since we could get called from UI
   //depending on player actions (getters should be side effect free)
-  if (fOrderTargetUnit <> nil) and (fOrderTargetUnit.IsDead) then
+  if (fOrderTargetUnit <> nil) and fOrderTargetUnit.IsDead then
     Result := nil
   else
     Result := fOrderTargetUnit;

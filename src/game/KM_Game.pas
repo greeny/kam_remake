@@ -1010,7 +1010,6 @@ var
   begin
     if (aFile <> '') and FileExists(aFile) then
     begin
-
       if Pos(aFile, attachedFilesStr) = 0 then
       begin
         attachedFilesStr := attachedFilesStr + aFile + '; ';

@@ -1303,11 +1303,11 @@ object FormMain: TFormMain
         Caption = '-'
       end
       object ReloadSettings: TMenuItem
-        Caption = 'Reload settings.ini'
+        Caption = 'Reload settings'
         OnClick = ReloadSettingsClick
       end
       object SaveSettings: TMenuItem
-        Caption = 'Save settings.ini'
+        Caption = 'Save settings'
         OnClick = SaveSettingsClick
       end
       object N7: TMenuItem

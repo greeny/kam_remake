@@ -174,7 +174,8 @@ begin
 
   fGameSettings := TKMGameSettings.Create;
 
-  fServerSettings := TKMServerSettings.Create;
+  // Create Server Settings in the shared folder
+  fServerSettings := TKMServerSettings.Create(False);
 
   fLastTimeRender := 0;
 

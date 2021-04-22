@@ -357,6 +357,7 @@ uses
   KM_RandomChecks,
   KM_Log, KM_CommonClasses, KM_Helpers, KM_Video,
   KM_GameSettings,
+  KM_ServerSettings,
 
   KM_IoXML,
   KM_GameInputProcess,
@@ -733,6 +734,7 @@ end;
 procedure TFormMain.ReloadSettingsClick(Sender: TObject);
 begin
   gGameAppSettings.ReloadSettings;
+  gServerSettings.ReloadSettings;
 end;
 
 
@@ -1040,6 +1042,7 @@ end;
 procedure TFormMain.SaveSettingsClick(Sender: TObject);
 begin
   gGameAppSettings.SaveSettings(True);
+  gServerSettings.SaveSettings(True);
 end;
 
 

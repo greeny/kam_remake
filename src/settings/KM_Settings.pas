@@ -6,8 +6,12 @@ type
   // Abstract settings entity
   TKMSettings = class abstract
   private
+    fUseLocalFolder: Boolean;
     procedure LoadFromDefaultFile;
     procedure SaveToDefaultFile;
+
+    function GetDirectory: string;
+    function GetPath: string;
   protected
     fNeedsSave: Boolean;
 
@@ -20,15 +24,15 @@ type
 
     function GetSettingsName: string; virtual; abstract;
   public
-    constructor Create;
+    constructor Create(aUseLocalFolder: Boolean);
     destructor Destroy; override;
 
-    function GetPath: string;
+    property Path: string read GetPath;
 
     procedure ReloadSettings;
     procedure SaveSettings(aForce: Boolean = False);
 
-    class function GetDir: string;
+    class function GetDir(aUseLocalFolder: Boolean = False): string;
   end;
 
 
@@ -41,9 +45,11 @@ uses
 
 
 { TKMSettings }
-constructor TKMSettings.Create;
+constructor TKMSettings.Create(aUseLocalFolder: Boolean);
 begin
-  inherited;
+  inherited Create;
+
+  fUseLocalFolder := aUseLocalFolder;
 
   LoadFromDefaultFile;
   // Save settings to default directory immidiately
@@ -64,17 +70,13 @@ end;
 
 function TKMSettings.GetPath: string;
 begin
-  Result := GetDir + GetDefaultSettingsName;
+  Result := GetDirectory + GetDefaultSettingsName;
 end;
 
 
-class function TKMSettings.GetDir: string;
+function TKMSettings.GetDirectory: string;
 begin
-  {$IFDEF LINUX_DEDI_SERVER}
-  Result := ExtractFilePath(ParamStr(0)); // Use executable dir for a linux dedicated server
-  {$ELSE}
-  Result := GetDocumentsSavePath; // Use %My documents%/My Games/
-  {$ENDIF}
+  Result := GetDir(fUseLocalFolder);
 end;
 
 
@@ -93,7 +95,7 @@ procedure TKMSettings.SaveToDefaultFile;
 var
   saveFolder, path: string;
 begin
-  saveFolder := GetDir;
+  saveFolder := GetDirectory;
   ForceDirectories(saveFolder);
   path := saveFolder + GetDefaultSettingsName;
   gLog.AddTime(Format('Start saving ''%s'' to ''%s''', [GetSettingsName, path]));
@@ -126,6 +128,15 @@ end;
 procedure TKMSettings.Changed;
 begin
   fNeedsSave := True;
+end;
+
+
+class function TKMSettings.GetDir(aUseLocalFolder: Boolean = False): string;
+begin
+  if aUseLocalFolder then
+    Result := ExtractFilePath(ParamStr(0))
+  else
+    Result := CreateAndGetDocumentsSavePath; // Use %My documents%/My Games/
 end;
 
 

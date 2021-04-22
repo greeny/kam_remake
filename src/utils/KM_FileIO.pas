@@ -42,7 +42,7 @@ uses
 
   function IsDirectoryWriteable(const aDir: string): Boolean;
 
-  function GetDocumentsSavePath: string;
+  function CreateAndGetDocumentsSavePath: string;
 
   procedure CheckFolderPermission(const aPath: string; var aRead, aWrite, aExec: Boolean);
 
@@ -382,7 +382,10 @@ begin
 end;
 
 
-function GetDocumentsSavePath: string;
+// Creates directory, if missing
+// If its not possible, or there are no read / write permissions on the directory,
+// then use execution directory (ExeDir)
+function CreateAndGetDocumentsSavePath: string;
 begin
   // Returns C:\Users\Username\My Documents\My Games\GAME_TITLE\
   // According to GDSE this is the most commonly used savegame location (https://gamedev.stackexchange.com/a/108243)
@@ -395,6 +398,7 @@ begin
     //Result := GetWindowsSpecialDir(CSIDL_PERSONAL) + PathDelim + 'My Games' + PathDelim + GAME_TITLE + PathDelim
     Result := GetUserDir + 'My Games' + PathDelim + GAME_TITLE + PathDelim;
   {$ENDIF}
+    ForceDirectories(Result);
     if not IsDirectoryWriteable(Result) then
       Result := ExtractFilePath(ParamStr(0));
   end
