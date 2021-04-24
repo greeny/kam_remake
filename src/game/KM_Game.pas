@@ -1,4 +1,4 @@
-unit KM_Game;
+﻿unit KM_Game;
 {$I KaM_Remake.inc}
 interface
 uses
@@ -657,8 +657,6 @@ begin
       //fScripting reports compile errors itself now
     end;
 
-    // MapTxtInfo should be loaded before MultiplayerRig, since we use map txt params there in UpdateHandState
-    fMapTxtInfo.LoadTXTInfo(ChangeFileExt(aMissionFile, '.txt'));
 
     case fParams.Mode of
       gmMulti, gmMultiSpectate:
@@ -686,6 +684,8 @@ begin
   finally
     parser.Free;
   end;
+
+  fMapTxtInfo.LoadTXTInfo(ChangeFileExt(aMissionFile, '.txt'));
 
   gLog.AddTime('Game options: ' + fOptions.ToString);
   gLog.AddTime('Gameplay initialized', True);
@@ -1994,7 +1994,6 @@ begin
     gameInfo.MapSizeX := gTerrain.MapX;
     gameInfo.MapSizeY := gTerrain.MapY;
     gameInfo.BlockColorSelection := fMapTxtInfo.BlockColorSelection;
-    gameInfo.IsSpecial := fMapTxtInfo.IsSpecial;
 
     gameInfo.PlayerCount := gHands.Count;
     for I := 0 to gHands.Count - 1 do
@@ -2344,8 +2343,6 @@ begin
       fSetGameTickEvent(gameInfo.TickCount);
       fParams.MissionMode := gameInfo.MissionMode;
       fParams.MissionDifficulty := gameInfo.MissionDifficulty;
-      fMapTxtInfo.BlockColorSelection := gameInfo.BlockColorSelection;
-      fMapTxtInfo.IsSpecial := gameInfo.IsSpecial;
     finally
       FreeAndNil(gameInfo);
     end;
