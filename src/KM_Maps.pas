@@ -231,7 +231,7 @@ type
     class function FullPath(const aName, aExt: string; aMapFolder: TKMapFolder; aCRC: Cardinal): string; overload;
 //    class function GuessMPPath(const aName, aExt: string; aCRC: Cardinal): string;
     class procedure GetAllMapPaths(const aExeDir: string; aList: TStringList);
-    class function GetMapCRC(const aName: UnicodeString; aIsMultiplayer: Boolean): Cardinal;
+    class function GetMapCRC(const aMapPath: string): Cardinal;
 
     procedure Refresh(aOnRefresh: TNotifyEvent;  aOnTerminate: TNotifyEvent = nil;aOnComplete: TNotifyEvent = nil);
     procedure TerminateScan;
@@ -1626,14 +1626,11 @@ begin
 end;
 
 
-class function TKMapsCollection.GetMapCRC(const aName: UnicodeString; aIsMultiplayer: Boolean): Cardinal;
-var
-  MapPath: UnicodeString;
+class function TKMapsCollection.GetMapCRC(const aMapPath: string): Cardinal;
 begin
   Result := 0;
-  MapPath := FullPath(aName, '.dat', aIsMultiplayer);
-  if FileExists(MapPath) then
-    Result := Adler32CRC(MapPath);
+  if FileExists(aMapPath) then
+    Result := Adler32CRC(aMapPath);
 end;
 
 
