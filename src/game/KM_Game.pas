@@ -1,4 +1,4 @@
-﻿unit KM_Game;
+unit KM_Game;
 {$I KaM_Remake.inc}
 interface
 uses
@@ -1993,7 +1993,8 @@ begin
     gameInfo.MissionDifficulty := fParams.MissionDifficulty;
     gameInfo.MapSizeX := gTerrain.MapX;
     gameInfo.MapSizeY := gTerrain.MapY;
-    gameInfo.TxtInfo := fMapTxtInfo;
+    gameInfo.BlockColorSelection := fMapTxtInfo.BlockColorSelection;
+    gameInfo.IsSpecial := fMapTxtInfo.IsSpecial;
 
     gameInfo.PlayerCount := gHands.Count;
     for I := 0 to gHands.Count - 1 do
@@ -2343,8 +2344,8 @@ begin
       fSetGameTickEvent(gameInfo.TickCount);
       fParams.MissionMode := gameInfo.MissionMode;
       fParams.MissionDifficulty := gameInfo.MissionDifficulty;
-      fMapTxtInfo := gameInfo.TxtInfo;
-      gameInfo.MapTxtInfoNasToBeFreed := False; // Don't Free MapTxtInfo object in gameInfo, its used by our game now
+      fMapTxtInfo.BlockColorSelection := gameInfo.BlockColorSelection;
+      fMapTxtInfo.IsSpecial := gameInfo.IsSpecial;
     finally
       FreeAndNil(gameInfo);
     end;

@@ -31,6 +31,8 @@ type
   private
     fBlockColorSelection: Boolean;
     function IsEmpty: Boolean;
+    procedure Load(LoadStream: TKMemoryStream);
+    procedure Save(SaveStream: TKMemoryStream);
     function GetBlockColorSelection: Boolean;
   public
     Author, Version, BigDesc, SmallDesc: UnicodeString;
@@ -47,10 +49,6 @@ type
     BlockFullMapPreview: Boolean;
 
     constructor Create;
-
-    procedure Load(LoadStream: TKMemoryStream);
-    procedure Save(SaveStream: TKMemoryStream);
-
     procedure SetBigDesc(const aBigDesc: UnicodeString);
     function GetBigDesc: UnicodeString;
 
@@ -257,9 +255,6 @@ uses
   KM_GameApp, KM_GameSettings, KM_FileIO,
   KM_MissionScript_Info, KM_Scripting,
   KM_CommonUtils, KM_Log;
-
-const
-  MAP_TXT_INFO_MARKER = 'MapTxtInfo';
 
 
 { TKMapInfo }
@@ -1205,10 +1200,6 @@ end;
 
 procedure TKMMapTxtInfo.Load(LoadStream: TKMemoryStream);
 begin
-  LoadStream.CheckMarker(MAP_TXT_INFO_MARKER);
-
-  LoadStream.ReadW(Author);
-  LoadStream.ReadW(Version);
   LoadStream.Read(IsCoop);
   LoadStream.Read(IsSpecial);
   LoadStream.Read(IsRMG);
@@ -1221,18 +1212,12 @@ begin
 
   LoadStream.ReadW(SmallDesc);
   LoadStream.Read(SmallDescLibx);
-
-  LoadStream.ReadW(BigDesc);
-  LoadStream.Read(BigDescLibx);
+//  aStream.ReadW(fBigDesc);
 end;
 
 
 procedure TKMMapTxtInfo.Save(SaveStream: TKMemoryStream);
 begin
-  SaveStream.PlaceMarker(MAP_TXT_INFO_MARKER);
-
-  SaveStream.WriteW(Author);
-  SaveStream.WriteW(Version);
   SaveStream.Write(IsCoop);
   SaveStream.Write(IsSpecial);
   SaveStream.Write(IsRMG);
@@ -1245,9 +1230,7 @@ begin
 
   SaveStream.WriteW(SmallDesc);
   SaveStream.Write(SmallDescLibx);
-
-  SaveStream.WriteW(BigDesc);
-  SaveStream.Write(BigDescLibx);
+//  aStream.WriteW(fBigDesc);
 end;
 
 
