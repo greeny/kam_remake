@@ -657,6 +657,8 @@ begin
       //fScripting reports compile errors itself now
     end;
 
+    // MapTxtInfo should be loaded before MultiplayerRig, since we use map txt params there in UpdateHandState
+    fMapTxtInfo.LoadTXTInfo(ChangeFileExt(aMissionFile, '.txt'));
 
     case fParams.Mode of
       gmMulti, gmMultiSpectate:
@@ -684,8 +686,6 @@ begin
   finally
     parser.Free;
   end;
-
-  fMapTxtInfo.LoadTXTInfo(ChangeFileExt(aMissionFile, '.txt'));
 
   gLog.AddTime('Game options: ' + fOptions.ToString);
   gLog.AddTime('Gameplay initialized', True);
@@ -1456,6 +1456,10 @@ begin
 
   fMapEditor.MissionDefSavePath := aPathName;
   fMapEditor.SaveAttachements(aPathName);
+
+  // Create empty script file, in there is no any. It will not harm anyone
+  KMCreateEmptyFile(ChangeFileExt(aPathName, EXT_FILE_SCRIPT_DOT));
+
   fMapTxtInfo.SaveTXTInfo(ChangeFileExt(aPathName, '.txt'));
   gTerrain.SaveToFile(ChangeFileExt(aPathName, '.map'), aInsetRect);
   fTerrainPainter.SaveToFile(ChangeFileExt(aPathName, '.map'), aInsetRect);
@@ -1989,7 +1993,7 @@ begin
     gameInfo.MissionDifficulty := fParams.MissionDifficulty;
     gameInfo.MapSizeX := gTerrain.MapX;
     gameInfo.MapSizeY := gTerrain.MapY;
-    gameInfo.BlockColorSelection := fMapTxtInfo.BlockColorSelection;
+    gameInfo.TxtInfo := fMapTxtInfo;
 
     gameInfo.PlayerCount := gHands.Count;
     for I := 0 to gHands.Count - 1 do
@@ -2339,6 +2343,8 @@ begin
       fSetGameTickEvent(gameInfo.TickCount);
       fParams.MissionMode := gameInfo.MissionMode;
       fParams.MissionDifficulty := gameInfo.MissionDifficulty;
+      fMapTxtInfo := gameInfo.TxtInfo;
+      gameInfo.MapTxtInfoNasToBeFreed := False; // Don't Free MapTxtInfo object in gameInfo, its used by our game now
     finally
       FreeAndNil(gameInfo);
     end;

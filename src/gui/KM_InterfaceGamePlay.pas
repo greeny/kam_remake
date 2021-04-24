@@ -1767,8 +1767,8 @@ begin
   mapPath := TKMapsCollection.FullPath(gGameParams.Name, '.dat', isMultiplayer);
   gameName := gGameParams.Name;
   FreeThenNil(gGame);
-  gGameApp.NewMapEditor(mapPath, 0, 0, TKMapsCollection.GetMapCRC(gameName, isMultiplayer));
-  TKMapEdInterface(gGame.ActiveInterface).SetLoadMode(isMultiplayer);
+  // current TKMGamePlayInterface object is destroyed, be careful
+  gGameApp.NewMapEditor(mapPath, 0, 0, TKMapsCollection.GetMapCRC(gameName, isMultiplayer), 0, isMultiplayer);
 end;
 
 

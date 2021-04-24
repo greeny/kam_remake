@@ -17,6 +17,8 @@ uses
   //Read text file into unicode string (locale texts)
   function ReadTextU(const afilename: UnicodeString; aEncoding: Word): UnicodeString;
 
+  procedure KMCreateEmptyFile(const aFilePath: UnicodeString);
+
   //Copy a file (CopyFile is different between Delphi and Lazarus)
   procedure KMCopyFile(const aSrc, aDest: UnicodeString); overload;
   procedure KMCopyFile(const aSrc, aDest: UnicodeString; aOverwrite: Boolean); overload;
@@ -481,6 +483,18 @@ begin
   aWrite  := True;
   aExec   := True;
   {$ENDIF}
+end;
+
+
+procedure KMCreateEmptyFile(const aFilePath: UnicodeString);
+var
+  ft: TextFile;
+begin
+  if FileExists(aFilePath) then Exit;
+
+  AssignFile(ft, aFilePath);
+  Rewrite(ft);
+  CloseFile(ft);
 end;
 
 

@@ -107,6 +107,8 @@ var
   ALLOW_INTERPOLATED_RENDER :Boolean = True; //Interpolate positions/animations in render between game ticks
   PATHFINDER_TO_USE     :Byte = 1;        //Use TPathfindingAStarNew
 
+  ENABLE_VIDEOS_UNDER_WINE: Boolean = DEBUG_CFG; //Do we enable videos under wine
+
   //Cache / delivery / pathfinding
   CACHE_PATHFINDING                       :Boolean = True; //Cache routes incase they are needed soon (Vortamic PF runs x4 faster even with lame approach)
   CACHE_PATHFINDING_AVOID_LOCKED          :Boolean = True; //Cache unsuccesfull tries to find route with avoid locked (as non walkable)

@@ -92,7 +92,8 @@ uses
   SysUtils, StrUtils, Math, KromUtils, KM_FileIO,
   KM_GameApp, KM_Helpers,
   KM_Log, KM_CommonUtils, KM_Defaults, KM_Points, KM_DevPerfLog,
-  KM_CommonExceptions;
+  KM_CommonExceptions,
+  KM_Utils;
 
 
 const
@@ -198,7 +199,7 @@ begin
       fMainSettings.FullScreen := False;
   end;
 
-  gVideoPlayer := TKMVideoPlayer.Create;
+  gVideoPlayer := TKMVideoPlayer.Create(ENABLE_VIDEOS_UNDER_WINE or not IsUnderWine);
 
   fFormMain.Caption := 'KaM Remake - ' + UnicodeString(GAME_VERSION);
   //Will make the form slightly higher, so do it before ReinitRender so it is reset
