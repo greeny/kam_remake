@@ -1742,7 +1742,7 @@ begin
   end;
 
   //The log path can't be stored in the save since it might be in MapsMP or MapsDL on different clients
-  fErrorHandler.ScriptLogFile := ExeDir + ChangeFileExt(gGameParams.MissionFile, SCRIPT_LOG_EXT);
+  fErrorHandler.ScriptLogFile := ExeDir + ChangeFileExt(gGameParams.MissionFileRel, SCRIPT_LOG_EXT);
 end;
 
 

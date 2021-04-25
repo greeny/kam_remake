@@ -2,7 +2,7 @@ unit KM_NetFileTransfer;
 {$I KaM_Remake.inc}
 interface
 uses
-  SysUtils, Math, KM_Defaults, KM_CommonClasses, KM_NetworkTypes
+  SysUtils, Math, KM_Defaults, KM_CommonClasses, KM_NetworkTypes, KM_MapTypes
   {$IFDEF FPC}, zstream {$ENDIF}
   {$IFDEF WDC}, ZLib {$ENDIF};
 

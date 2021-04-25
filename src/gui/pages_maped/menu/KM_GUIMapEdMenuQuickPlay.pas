@@ -128,14 +128,14 @@ end;
 
 procedure TKMMapEdMenuQuickPlay.StartQuickPlay(aMapSaved: Boolean);
 var
-  GameName, MissionFile: String;
+  GameName, missionFileRel: String;
   Color: Cardinal;
   HandID: Integer;
   IsMultiplayer: Boolean;
   Difficulty: TKMMissionDifficulty;
   AIType: TKMAIType;
 begin
-  MissionFile := gGameParams.MissionFile;
+  missionFileRel := gGameParams.MissionFileRel;
   GameName := gGameParams.Name;
   HandId := DropList_SelectHand.GetSelectedTag;
   Color := gHands[HandId].FlagColor;
@@ -148,7 +148,7 @@ begin
   AIType := TKMAIType(Radio_AIOpponents.ItemIndex + 1);
 
   FreeThenNil(gGame);
-  gGameApp.NewSingleMap(MissionFile, GameName, HandId, Color, Difficulty, AIType, not aMapSaved);
+  gGameApp.NewSingleMap(ExeDir + missionFileRel, GameName, HandId, Color, Difficulty, AIType, not aMapSaved);
   gGame.StartedFromMapEditor := True;
   gGame.StartedFromMapEdAsMPMap := IsMultiplayer;
   TKMGamePlayInterface(gGame.ActiveInterface).UpdateUI;

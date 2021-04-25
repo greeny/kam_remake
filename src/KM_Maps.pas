@@ -244,9 +244,6 @@ type
     procedure UpdateState;
   end;
 
-  function GetMapFolderType(aIsMultiplayer: Boolean): TKMapFolder;
-  function DetermineMapFolder(const aFolderName: UnicodeString; out aMapFolder: TKMapFolder): Boolean;
-
 
 implementation
 uses
@@ -254,7 +251,7 @@ uses
   KromShellUtils, KromUtils,
   KM_GameApp, KM_GameSettings, KM_FileIO,
   KM_MissionScript_Info, KM_Scripting,
-  KM_CommonUtils, KM_Log;
+  KM_CommonUtils, KM_Log, KM_MapUtils;
 
 
 { TKMapInfo }
@@ -1786,33 +1783,6 @@ procedure TTMapsCacheUpdater.Stop;
 begin
   if Self <> nil then
     fIsStopped := True;
-end;
-
-
-{Utility methods}
-//Try to determine TMapFolder for specified aFolderName
-//Returns true when succeeded
-function DetermineMapFolder(const aFolderName: UnicodeString; out aMapFolder: TKMapFolder): Boolean;
-var
-  F: TKMapFolder;
-begin
-  for F := Low(TKMapFolder) to High(TKMapFolder) do
-    if aFolderName = MAP_FOLDER[F] then
-    begin
-      aMapFolder := F;
-      Result := True;
-      Exit;
-    end;
-  Result := False;
-end;
-
-
-function GetMapFolderType(aIsMultiplayer: Boolean): TKMapFolder;
-begin
-  if aIsMultiplayer then
-    Result := mfMP
-  else
-    Result := mfSP;
 end;
 
 

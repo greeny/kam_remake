@@ -93,7 +93,7 @@ uses
   KM_GameApp, KM_Helpers,
   KM_Log, KM_CommonUtils, KM_Defaults, KM_Points, KM_DevPerfLog,
   KM_CommonExceptions,
-  KM_Utils;
+  KM_Utils, KM_MapTypes;
 
 
 const

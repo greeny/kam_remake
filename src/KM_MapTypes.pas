@@ -5,6 +5,9 @@ uses
   KM_Defaults, KM_CommonTypes;
 
 type
+  TKMapFolder = (mfSP, mfMP, mfDL);
+  TKMapFolderSet = set of TKMapFolder;
+
   TKMMissionDifficulty = (mdNone, mdEasy3, mdEasy2, mdEasy1, mdNormal, mdHard1, mdHard2, mdHard3);
   TKMMissionDifficultySet = set of TKMMissionDifficulty;
 

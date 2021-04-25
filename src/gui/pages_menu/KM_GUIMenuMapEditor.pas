@@ -125,7 +125,8 @@ uses
   KM_GameSettings, 
   KM_ServerSettings,
   KM_RenderUI, KM_Resource, KM_ResFonts,
-  KM_Pics, KM_CommonUtils;
+  KM_Pics, KM_CommonUtils,
+  KM_MapTypes;
 
 const
   MAPSIZES_COUNT = 8;

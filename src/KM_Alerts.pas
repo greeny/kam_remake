@@ -398,7 +398,7 @@ begin
       0:  if gMySpectator.FogOfWar.CheckRevelation(fList[I].Loc) > 0 then
             gRenderPool.AddAlert(fList[I].Loc, fList[I].TexTerrain.ID, fList[I].TeamColor);
       1:  if gMySpectator.FogOfWar.CheckRevelation(fList[I].Loc) < FOG_OF_WAR_MAX then
-            gRenderPool.RenderSpriteOnTerrain(fList[I].Loc, fList[I].TexTerrain.ID, fList[I].TeamColor);
+            gRenderPool.RenderSpriteOnTerrain(fList[I].Loc, fList[I].TexTerrain.ID, fList[I].TeamColor, True);
     end;
   end;
 end;

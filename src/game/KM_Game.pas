@@ -68,7 +68,7 @@ type
     fLastReplayTickLocal: Cardinal; // stored / loaded in the .sloc file, if available
     fSkipReplayEndCheck: Boolean;
 
-    //DO not save
+    //Do not save
     fSpeedChangeTick: Single;
     fSpeedChangeTime: Cardinal; //time of last game speed change
     fPausedTicksCnt: Cardinal;
@@ -114,6 +114,8 @@ type
     procedure OtherPlayerDisconnected(aDefeatedPlayerHandId: Integer);
     function GetActiveHandIDs: TKMByteSet;
 
+    procedure RecalcMapCRC;
+
     function GetTickDuration: Single;
     procedure UpdateTickCounters;
     function GetTicksBehindCnt: Single;
@@ -149,7 +151,7 @@ type
                        aSaveWorkerThread: TKMWorkerThread; aBaseSaveWorkerThread: TKMWorkerThread; aAutoSaveWorkerThread: TKMWorkerThread);
     destructor Destroy; override;
 
-    procedure Start(const aMissionFile, aName: UnicodeString; aFullCRC, aSimpleCRC: Cardinal; aCampaign: TKMCampaign;
+    procedure Start(const aMissionFullFilePath, aName: UnicodeString; aFullCRC, aSimpleCRC: Cardinal; aCampaign: TKMCampaign;
                     aCampMap: Byte; aLocation: ShortInt; aColor: Cardinal; aMapDifficulty: TKMMissionDifficulty = mdNone;
                     aAIType: TKMAIType = aitNone; aAutoselectHumanLoc: Boolean = False);
 
@@ -302,7 +304,8 @@ uses
   KM_Log, KM_ScriptingEvents, KM_Saves, KM_FileIO, KM_CommonUtils, KM_RandomChecks, KM_DevPerfLog, KM_DevPerfLogTypes,
   KM_NetPlayersList,
   KM_HandTypes,
-  KM_ServerSettings;
+  KM_ServerSettings,
+  KM_MapUtils;
 
 const
   LAST_SAVES_MAX_CNT = 5; // Max number of save names to collect for crashreport
@@ -321,7 +324,7 @@ begin
   if gMain <> nil then
     gMain.FormMain.SuppressAltForMenu := True;
 
-  fParams := TKMGameParams.Create(aGameMode, fSetGameTickEvent, fSetGameModeEvent, fSetMissionFileSP, fSetBlockPointer);
+  fParams := TKMGameParams.Create(aGameMode, RecalcMapCRC, fSetGameTickEvent, fSetGameModeEvent, fSetMissionFileSP, fSetBlockPointer);
 
   fSaveWorkerThread := aSaveWorkerThread;
   fBaseSaveWorkerThread := aBaseSaveWorkerThread;
@@ -493,7 +496,7 @@ end;
 
 
 // New mission
-procedure TKMGame.Start(const aMissionFile, aName: UnicodeString; aFullCRC, aSimpleCRC: Cardinal; aCampaign: TKMCampaign;
+procedure TKMGame.Start(const aMissionFullFilePath, aName: UnicodeString; aFullCRC, aSimpleCRC: Cardinal; aCampaign: TKMCampaign;
                             aCampMap: Byte; aLocation: ShortInt; aColor: Cardinal;
                             aMapDifficulty: TKMMissionDifficulty = mdNone; aAIType: TKMAIType = aitNone;
                             aAutoselectHumanLoc: Boolean = False);
@@ -517,8 +520,12 @@ begin
   gRes.Wares.ResetToDefaults;
 
   fParams.Name := aName;
+
+  fParams.MissionFullFilePath := aMissionFullFilePath;
+
   fParams.MapSimpleCRC := aSimpleCRC;
   fParams.MapFullCRC := aFullCRC;
+
   if aCampaign <> nil then
     fCampaignName := aCampaign.CampaignId
   else
@@ -530,13 +537,13 @@ begin
   if fParams.IsMultiPlayerOrSpec then
     fSetMissionFileSP('') //In MP map could be in DL or MP folder, so don't store path
   else
-    fSetMissionFileSP(ExtractRelativePath(ExeDir, aMissionFile));
+    fSetMissionFileSP(ExtractRelativePath(ExeDir, aMissionFullFilePath)); // We store relative path
 
   fLoadFromFileRel := '';
   fLastSaveFileRel := '';
   FreeAndNil(gMySpectator); //In case somebody looks at it while parsing DAT, e.g. destroyed houses
 
-  gLog.AddTime('Loading DAT file: ' + aMissionFile);
+  gLog.AddTime('Loading DAT file: ' + aMissionFullFilePath);
 
   //Disable players in MP to skip their assets from loading by MissionParser
   //In SP all players are enabled by default
@@ -575,13 +582,13 @@ begin
     //Mission loader needs to read the data into MapEd (e.g. FOW revealers)
     fMapEditor := TKMMapEditor.Create(False, fTerrainPainter, fMapEditorInterface.HistoryUndoRedo, fMapEditorInterface.HistoryAddCheckpoint);
     fMapEditor.OnEyedropper := fMapEditorInterface.GuiTerrain.GuiTiles.TilesTableSetTileTexId;
-    fMapEditor.DetectAttachedFiles(aMissionFile);
+    fMapEditor.DetectAttachedFiles(aMissionFullFilePath);
   end;
 
   parser := TKMMissionParserStandard.Create(parseMode, playerEnabled);
   try
     // Any fatal errors in parsing will be raised as exceptions and caught up higher
-    parser.LoadMission(aMissionFile);
+    parser.LoadMission(aMissionFullFilePath);
 
     if fParams.IsMapEditor then
     begin
@@ -653,23 +660,25 @@ begin
         campaignDataTypeFile := '';
       end;
 
-      fScripting.LoadFromFile(ChangeFileExt(aMissionFile, '.script'), campaignDataTypeFile, campaignData);
+      fScripting.LoadFromFile(ChangeFileExt(aMissionFullFilePath, '.script'), campaignDataTypeFile, campaignData);
       //fScripting reports compile errors itself now
     end;
 
+    // MapTxtInfo should be loaded before MultiplayerRig, since we use map txt params there in UpdateHandState
+    fMapTxtInfo.LoadTXTInfo(ChangeFileExt(aMissionFullFilePath, '.txt'));
 
     case fParams.Mode of
       gmMulti, gmMultiSpectate:
                 begin
                   fGameInputProcess := TKMGameInputProcess_Multi.Create(gipRecording);
                   fTextMission := TKMTextLibraryMulti.Create;
-                  fTextMission.LoadLocale(ChangeFileExt(aMissionFile, '.%s.libx'));
+                  fTextMission.LoadLocale(ChangeFileExt(aMissionFullFilePath, '.%s.libx'));
                 end;
       gmSingle, gmCampaign:
                 begin
                   fGameInputProcess := TKMGameInputProcess_Single.Create(gipRecording);
                   fTextMission := TKMTextLibraryMulti.Create;
-                  fTextMission.LoadLocale(ChangeFileExt(aMissionFile, '.%s.libx'));
+                  fTextMission.LoadLocale(ChangeFileExt(aMissionFullFilePath, '.%s.libx'));
                 end;
       gmMapEd:  ;
     end;
@@ -954,6 +963,26 @@ begin
 end;
 
 
+procedure TKMGame.RecalcMapCRC;
+var
+  mapInfo: TKMapInfo;
+  mapFolder: TKMapFolder;
+  fileDirName: string;
+begin
+  fileDirName := GetFileDirName(ExtractFileDir(fParams.MissionFullFilePath));
+  if DetermineMapFolder(fileDirName, mapFolder) then
+  begin
+    mapInfo := TKMapInfo.Create(GetFileDirName(fParams.MissionFullFilePath), True, mapFolder); //Force recreate map CRC
+    try
+      fParams.MapFullCRC := mapInfo.CRC;
+      fParams.MapSimpleCRC := mapInfo.MapAndDatCRC;
+    finally
+      mapInfo.Free;
+    end;
+  end;
+end;
+
+
 // Get active hand ids as set (enabled hands for SP/replay or connected not spectators
 function TKMGame.GetActiveHandIDs: TKMByteSet;
 var
@@ -1067,7 +1096,7 @@ begin
     fSaveWorkerThread.fSynchronousExceptionMode := False;
   end;
 
-  missionFile := fParams.MissionFile;
+  missionFile := fParams.MissionFileRel;
   path := ExtractFilePath(ExeDir + missionFile);
 
   // Try to attach the dat+map
@@ -1434,8 +1463,13 @@ var
   mapInfo: TKMapInfo;
   mapFolder: TKMapFolder;
   mapPath: string;
+  oldSimpleCRC, oldFullCRC: Cardinal;
 begin
-  if aPathName = '' then exit;
+  if aPathName = '' then Exit;
+
+  // Store old values, cause they will be updated after save
+  oldSimpleCRC := fParams.MapSimpleCRC;
+  oldFullCRC := fParams.MapFullCRC;
 
   // Prepare and save
 
@@ -1472,37 +1506,44 @@ begin
   begin
     // Update GameSettings for saved maps positions in list on MapEd menu
     mapInfo := TKMapInfo.Create(GetFileDirName(aPathName), True, mapFolder); //Force recreate map CRC
-    case mapInfo.MapFolder of
-      mfSP:       begin
-                    gGameSettings.MenuMapEdSPMapCRC := mapInfo.MapAndDatCRC;
-                    gGameSettings.MenuMapEdMapType := 0;
-                    // Update saved SP game list saved selected map position CRC if we resave this map
-                    if fParams.MapSimpleCRC = gGameSettings.MenuSPScenarioMapCRC then
-                      gGameSettings.MenuSPScenarioMapCRC := mapInfo.MapAndDatCRC;
-                    if fParams.MapSimpleCRC = gGameSettings.MenuSPMissionMapCRC then
-                      gGameSettings.MenuSPMissionMapCRC := mapInfo.MapAndDatCRC;
-                    if fParams.MapSimpleCRC = gGameSettings.MenuSPTacticMapCRC then
-                      gGameSettings.MenuSPTacticMapCRC := mapInfo.MapAndDatCRC;
-                    if fParams.MapSimpleCRC = gGameSettings.MenuSPSpecialMapCRC then
-                      gGameSettings.MenuSPSpecialMapCRC := mapInfo.MapAndDatCRC;
-                  end;
-      mfMP:       begin
-                    gGameSettings.MenuMapEdMPMapCRC := mapInfo.MapAndDatCRC;
-                    gGameSettings.MenuMapEdMPMapName := mapInfo.FileName;
-                    gGameSettings.MenuMapEdMapType := 1;
-                  end;
-      mfDL:       begin
-                    gGameSettings.MenuMapEdDLMapCRC := mapInfo.MapAndDatCRC;
-                    gGameSettings.MenuMapEdMapType := 2;
-                  end;
+    try
+      case mapInfo.MapFolder of
+        mfSP:       begin
+                      gGameSettings.MenuMapEdSPMapCRC := mapInfo.MapAndDatCRC;
+                      gGameSettings.MenuMapEdMapType := 0;
+                      // Update saved SP game list saved selected map position CRC if we resave this map
+                      if oldSimpleCRC = gGameSettings.MenuSPScenarioMapCRC then
+                        gGameSettings.MenuSPScenarioMapCRC := mapInfo.MapAndDatCRC;
+                      if oldSimpleCRC = gGameSettings.MenuSPMissionMapCRC then
+                        gGameSettings.MenuSPMissionMapCRC := mapInfo.MapAndDatCRC;
+                      if oldSimpleCRC = gGameSettings.MenuSPTacticMapCRC then
+                        gGameSettings.MenuSPTacticMapCRC := mapInfo.MapAndDatCRC;
+                      if oldSimpleCRC = gGameSettings.MenuSPSpecialMapCRC then
+                        gGameSettings.MenuSPSpecialMapCRC := mapInfo.MapAndDatCRC;
+                    end;
+        mfMP:       begin
+                      gGameSettings.MenuMapEdMPMapCRC := mapInfo.MapAndDatCRC;
+                      gGameSettings.MenuMapEdMPMapName := mapInfo.FileName;
+                      gGameSettings.MenuMapEdMapType := 1;
+                    end;
+        mfDL:       begin
+                      gGameSettings.MenuMapEdDLMapCRC := mapInfo.MapAndDatCRC;
+                      gGameSettings.MenuMapEdMapType := 2;
+                    end;
+      end;
+      // Update favorite map CRC if we resave favourite map with the same name
+      if fParams.Name = mapInfo.FileName then
+      begin
+        gGameSettings.FavouriteMaps.Replace(oldSimpleCRC, mapInfo.MapAndDatCRC);
+        gServerSettings.ServerMapsRoster.Replace(oldFullCRC, mapInfo.CRC);
+      end;
+
+      // Update CRC's after map save
+      fParams.MapSimpleCRC := mapInfo.MapAndDatCRC;
+      fParams.MapFullCRC := mapInfo.CRC;
+    finally
+      mapInfo.Free;
     end;
-    // Update favorite map CRC if we resave favourite map with the same name
-    if fParams.Name = mapInfo.FileName then
-    begin
-      gGameSettings.FavouriteMaps.Replace(fParams.MapSimpleCRC, mapInfo.MapAndDatCRC);
-      gServerSettings.ServerMapsRoster.Replace(fParams.MapFullCRC, mapInfo.CRC);
-    end;
-    mapInfo.Free;
   end;
 
   fParams.Name := TruncateExt(ExtractFileName(aPathName));
@@ -1573,7 +1614,7 @@ begin
     afOgg: ext := OGG_FILE_EXT;
   end;
 
-  Result := ExeDir + ChangeFileExt(fParams.MissionFile, '.' + UnicodeString(aSound) + ext);
+  Result := ExeDir + ChangeFileExt(fParams.MissionFileRel, '.' + UnicodeString(aSound) + ext);
 
   // Try to load Campaign specific audio file (not mission specific)
   if fParams.IsCampaign and (gGameApp.Campaigns.ActiveCampaign <> nil) and not FileExists(Result) then
@@ -2059,7 +2100,7 @@ begin
 
   //We need to know which mission/savegame to try to restart. This is unused in MP
   if not fParams.IsMultiPlayerOrSpec then
-    aBodyStream.WriteW(fParams.MissionFileSP);
+    aBodyStream.WriteW(fParams.MissionFileRelSP);
 
   fUIDTracker.Save(aBodyStream); //Units-Houses ID tracker
   aBodyStream.Write(GetKaMSeed); //Include the random seed in the save file to ensure consistency in replays

@@ -38,7 +38,7 @@ type
 implementation
 uses
   KM_ResTexts, KM_Game, KM_GameApp, KM_RenderUI, KM_ResFonts, KM_InterfaceGame,
-  KM_InterfaceMapEditor, KM_Defaults;
+  KM_InterfaceMapEditor, KM_Defaults, KM_MapTypes;
 
 
 { TKMMapEdMenuLoad }
@@ -94,21 +94,16 @@ end;
 //Mission loading dialog
 procedure TKMMapEdMenuLoad.Menu_LoadClick(Sender: TObject);
 var
-  MapName: string;
-  IsMulti: Boolean;
+  mapName: string;
+  isMulti: Boolean;
 begin
   if (Sender = Button_LoadLoad) or (Sender = ListBox_Load) then
   begin
     if ListBox_Load.ItemIndex = -1 then Exit;
 
-    MapName := ListBox_Load.Item[ListBox_Load.ItemIndex];
-    IsMulti := Radio_Load_MapType.ItemIndex <> 0;
-    gGameApp.NewMapEditor(TKMapsCollection.FullPath(MapName, '.dat', TKMapFolder(Radio_Load_MapType.ItemIndex)));
-
-    //Keep MP/SP selected in the map editor interface
-    //(if mission failed to load we would have fGame = nil)
-    if (gGame <> nil) and (gGame.ActiveInterface is TKMapEdInterface) then
-      TKMapEdInterface(gGame.ActiveInterface).SetLoadMode(IsMulti);
+    mapName := ListBox_Load.Item[ListBox_Load.ItemIndex];
+    isMulti := Radio_Load_MapType.ItemIndex <> 0;
+    gGameApp.NewMapEditor(TKMapsCollection.FullPath(mapName, '.dat', TKMapFolder(Radio_Load_MapType.ItemIndex)), isMulti);
   end
   else
   if Sender = Button_LoadCancel then

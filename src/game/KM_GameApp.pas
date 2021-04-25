@@ -51,7 +51,7 @@ type
     procedure GameLoadingStep(const aText: UnicodeString);
     procedure LoadGameAssets;
     procedure LoadGameFromSave(const aFilePath: String; aGameMode: TKMGameMode; const aGIPPath: String = '');
-    procedure LoadGameFromScript(const aMissionFile, aGameName: String; aFullCRC, aSimpleCRC: Cardinal; aCampaign: TKMCampaign;
+    procedure LoadGameFromScript(const aMissionFullFilePath, aGameName: String; aFullCRC, aSimpleCRC: Cardinal; aCampaign: TKMCampaign;
                                  aMap: Byte; aGameMode: TKMGameMode; aDesiredLoc: ShortInt; aDesiredColor: Cardinal;
                                  aDifficulty: TKMMissionDifficulty = mdNone; aAIType: TKMAIType = aitNone;
                                  aAutoselectHumanLoc: Boolean = False);
@@ -91,21 +91,25 @@ type
 
     //These are all different game kinds we can start
     procedure NewCampaignMap(aCampaignId: TKMCampaignId; aMap: Byte; aDifficulty: TKMMissionDifficulty = mdNone);
-    procedure NewSingleMap(const aMissionFile, aGameName: UnicodeString; aDesiredLoc: ShortInt = -1;
+    procedure NewSingleMap(const aMissionFullPath, aGameName: UnicodeString; aDesiredLoc: ShortInt = -1;
                            aDesiredColor: Cardinal = $00000000; aDifficulty: TKMMissionDifficulty = mdNone;
                            aAIType: TKMAIType = aitNone; aAutoselectHumanLoc: Boolean = False);
     procedure NewSingleSave(const aSaveName: UnicodeString);
     procedure NewMultiplayerMap(const aFileName: UnicodeString; aMapFolder: TKMapFolder; aCRC: Cardinal; aSpectating: Boolean;
                                 aDifficulty: TKMMissionDifficulty);
     procedure NewMultiplayerSave(const aSaveName: UnicodeString; Spectating: Boolean);
-    procedure NewRestartLast(const aGameName, aMission, aSave: UnicodeString; aGameMode: TKMGameMode; aCampName: TKMCampaignId;
+    procedure NewRestartLast(const aGameName, aMissionFileRel, aSave: UnicodeString; aGameMode: TKMGameMode; aCampName: TKMCampaignId;
                              aCampMap: Byte; aLocation: Byte; aColor: Cardinal; aDifficulty: TKMMissionDifficulty = mdNone;
                              aAIType: TKMAIType = aitNone);
+
     procedure NewEmptyMap(aSizeX, aSizeY: Integer);
-    procedure NewMapEditor(const aFileName: UnicodeString; aSizeX: Integer = 0; aSizeY: Integer = 0;
-                           aMapFullCRC: Cardinal = 0; aMapSimpleCRC: Cardinal = 0; aMultiplayerLoadMode: Boolean = False);
+    procedure NewMapEditor(const aFullFilePath: UnicodeString; aMultiplayerLoadMode: Boolean); overload;
+    procedure NewMapEditor(const aFullFilePath: UnicodeString; aSizeX: Integer = 0; aSizeY: Integer = 0;
+                           aMapFullCRC: Cardinal = 0; aMapSimpleCRC: Cardinal = 0; aMultiplayerLoadMode: Boolean = False); overload;
+
     procedure NewReplay(const aFilePath: UnicodeString);
     procedure NewSaveAndReplay(const aSavPath, aRplPath: UnicodeString);
+
     function TryLoadSavePoint(aTick: Integer): Boolean;
     procedure LoadPrevSavePoint;
 
@@ -735,16 +739,16 @@ end;
 
 
 //Do not use _const_ aMissionFile, aGameName: UnicodeString, as for some unknown reason sometimes aGameName is not accessed after StopGame(grSilent) (pointing to a wrong value)
-procedure TKMGameApp.LoadGameFromScript(const aMissionFile, aGameName: String; aFullCRC, aSimpleCRC: Cardinal; aCampaign: TKMCampaign;
+procedure TKMGameApp.LoadGameFromScript(const aMissionFullFilePath, aGameName: String; aFullCRC, aSimpleCRC: Cardinal; aCampaign: TKMCampaign;
                                         aMap: Byte; aGameMode: TKMGameMode; aDesiredLoc: ShortInt; aDesiredColor: Cardinal;
                                         aDifficulty: TKMMissionDifficulty = mdNone; aAIType: TKMAIType = aitNone;
                                         aAutoselectHumanLoc: Boolean = False);
 var
-  loadError, missionFile, gameName: String;
+  loadError, missionFullFilePath, gameName: String;
 begin
   //Save const parameters locally, since it could be destroyed as some Game Object instance in StopGame
   //!!!!! DO NOT USE aMissionFile or aGameName further in this method
-  missionFile := aMissionFile;
+  missionFullFilePath := aMissionFullFilePath;
   gameName := aGameName;
   //!!!!! ------------------------------------------------------------
   StopGame(grSilent); //Stop everything silently
@@ -756,7 +760,7 @@ begin
 
   CreateGame(aGameMode);
   try
-    gGame.Start(missionFile, gameName, aFullCRC, aSimpleCRC, aCampaign, aMap, aDesiredLoc, aDesiredColor, aDifficulty, aAIType, aAutoselectHumanLoc);
+    gGame.Start(missionFullFilePath, gameName, aFullCRC, aSimpleCRC, aCampaign, aMap, aDesiredLoc, aDesiredColor, aDifficulty, aAIType, aAutoselectHumanLoc);
   except
     on E : Exception do
     begin
@@ -764,7 +768,7 @@ begin
       //Note: While debugging, Delphi will still stop execution for the exception,
       //unless Tools > Debugger > Exception > "Stop on Delphi Exceptions" is unchecked.
       //But to normal player the dialog won't show.
-      loadError := Format(gResTexts[TX_MENU_PARSE_ERROR], [missionFile]) + '||' + E.ClassName + ': ' + E.Message;
+      loadError := Format(gResTexts[TX_MENU_PARSE_ERROR], [missionFullFilePath]) + '||' + E.ClassName + ': ' + E.Message;
       StopGame(grError, loadError);
       gLog.AddTime('Game creation Exception: ' + loadError
         {$IFDEF WDC} + sLineBreak + E.StackTrace {$ENDIF}
@@ -898,11 +902,11 @@ begin
 end;
 
 
-procedure TKMGameApp.NewSingleMap(const aMissionFile, aGameName: UnicodeString; aDesiredLoc: ShortInt = -1;
+procedure TKMGameApp.NewSingleMap(const aMissionFullPath, aGameName: UnicodeString; aDesiredLoc: ShortInt = -1;
                                   aDesiredColor: Cardinal = $00000000; aDifficulty: TKMMissionDifficulty = mdNone;
                                   aAIType: TKMAIType = aitNone; aAutoselectHumanLoc: Boolean = False);
 begin
-  LoadGameFromScript(aMissionFile, aGameName, 0, 0, nil, 0, gmSingle, aDesiredLoc, aDesiredColor, aDifficulty, aAIType,
+  LoadGameFromScript(aMissionFullPath, aGameName, 0, 0, nil, 0, gmSingle, aDesiredLoc, aDesiredColor, aDifficulty, aAIType,
                      aAutoselectHumanLoc);
 
   if Assigned(fOnGameStart) and (gGame <> nil) then
@@ -962,12 +966,12 @@ begin
 end;
 
 
-procedure TKMGameApp.NewRestartLast(const aGameName, aMission, aSave: UnicodeString; aGameMode: TKMGameMode;
+procedure TKMGameApp.NewRestartLast(const aGameName, aMissionFileRel, aSave: UnicodeString; aGameMode: TKMGameMode;
                                     aCampName: TKMCampaignId; aCampMap: Byte; aLocation: Byte; aColor: Cardinal;
                                     aDifficulty: TKMMissionDifficulty = mdNone; aAIType: TKMAIType = aitNone);
 begin
-  if FileExists(ExeDir + aMission) then
-    LoadGameFromScript(ExeDir + aMission, aGameName, 0, 0, fCampaigns.CampaignById(aCampName), aCampMap, aGameMode, aLocation, aColor, aDifficulty, aAIType)
+  if FileExists(ExeDir + aMissionFileRel) then
+    LoadGameFromScript(ExeDir + aMissionFileRel, aGameName, 0, 0, fCampaigns.CampaignById(aCampName), aCampMap, aGameMode, aLocation, aColor, aDifficulty, aAIType)
   else
   if FileExists(ChangeFileExt(ExeDir + aSave, EXT_SAVE_BASE_DOT)) then
     LoadGameFromSave(ChangeFileExt(ExeDir + aSave, EXT_SAVE_BASE_DOT), aGameMode)
@@ -991,12 +995,18 @@ begin
 end;
 
 
-procedure TKMGameApp.NewMapEditor(const aFileName: UnicodeString; aSizeX: Integer = 0; aSizeY: Integer = 0;
+procedure TKMGameApp.NewMapEditor(const aFullFilePath: UnicodeString; aMultiplayerLoadMode: Boolean);
+begin
+  NewMapEditor(aFullFilePath, 0, 0, 0, 0, aMultiplayerLoadMode);
+end;
+
+
+procedure TKMGameApp.NewMapEditor(const aFullFilePath: UnicodeString; aSizeX: Integer = 0; aSizeY: Integer = 0;
                                   aMapFullCRC: Cardinal = 0; aMapSimpleCRC: Cardinal = 0; aMultiplayerLoadMode: Boolean = False);
 begin
-  if aFileName <> '' then
+  if aFullFilePath <> '' then
   begin
-    LoadGameFromScript(aFileName, TruncateExt(ExtractFileName(aFileName)), aMapFullCRC, aMapSimpleCRC, nil, 0, gmMapEd, 0, 0);
+    LoadGameFromScript(aFullFilePath, TruncateExt(ExtractFileName(aFullFilePath)), aMapFullCRC, aMapSimpleCRC, nil, 0, gmMapEd, 0, 0);
     // gGame could be nil if we failed to load map
     if gGame <> nil then
       gGame.MapEditorInterface.SetLoadMode(aMultiplayerLoadMode);

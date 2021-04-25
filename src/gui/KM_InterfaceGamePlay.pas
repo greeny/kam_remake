@@ -376,7 +376,7 @@ uses
   KM_GameTypes, KM_GameParams, KM_Video, KM_Music,
   KM_HandEntityHelper,
   KM_ResTypes,
-  KM_Utils;
+  KM_Utils, KM_MapUtils;
 
 const
   ALLIES_ROWS = 7;
@@ -1718,8 +1718,8 @@ begin
   if gGameParams.IsNormalGame then // Don't play Victory / Defeat videos for specs
   begin
     case aMsg of
-      grWin:              gVideoPlayer.AddMissionVideo(gGameParams.MissionFile, 'Victory');
-      grDefeat, grCancel: gVideoPlayer.AddMissionVideo(gGameParams.MissionFile, 'Defeat');
+      grWin:              gVideoPlayer.AddMissionVideo(gGameParams.MissionFileRel, 'Victory');
+      grDefeat, grCancel: gVideoPlayer.AddMissionVideo(gGameParams.MissionFileRel, 'Defeat');
     end;
     gVideoPlayer.Play;
   end;
@@ -1772,15 +1772,25 @@ end;
 
 procedure TKMGamePlayInterface.Menu_ReturnToMapEd(Sender: TObject);
 var
-  missionPath, gameName: UnicodeString;
+  missionFullPath: UnicodeString;
   isMultiplayer: Boolean;
+  mapFullCRC, mapSimpleCRC: Cardinal;
 begin
   isMultiplayer := gGame.StartedFromMapEdAsMPMap;
-  missionPath := gGameParams.MissionFile;
-  gameName := gGameParams.Name;
+
+  mapSimpleCRC := 0;
+  mapFullCRC := 0;
+  // Save locally CRC's if they were calculated, to skip further calculations of CRC's
+  if gGameParams.IsCRCCalculated then
+  begin
+    mapSimpleCRC := gGameParams.MapSimpleCRC;
+    mapFullCRC := gGameParams.MapFullCRC;
+  end;
+
+  missionFullPath := gGameParams.MissionFullFilePath;
   FreeThenNil(gGame);
-  // current TKMGamePlayInterface object is destroyed, be careful
-  gGameApp.NewMapEditor(missionPath, 0, 0, TKMapsCollection.GetMapCRC(missionPath), 0, isMultiplayer);
+  // current TKMGamePlayInterface object is destroyed, use only local variables here
+  gGameApp.NewMapEditor(missionFullPath, 0, 0, mapFullCRC, mapSimpleCRC, isMultiplayer);
 end;
 
 

@@ -1355,18 +1355,22 @@ end;
 
 // Returns file directory name
 // F.e. for aFilePath = 'c:/kam/remake/fore.ver' returns 'remake'
+// and for 'Maps/My new map' returns 'Maps'
 function GetFileDirName(const aFilePath: UnicodeString): UnicodeString;
-var DirPath: UnicodeString;
+var
+  dirPath: UnicodeString;
 begin
   Result := '';
   if Trim(aFilePath) = '' then Exit;
 
-  DirPath := ExtractFileDir(aFilePath);
+  dirPath := ExtractFileDir(aFilePath);
 
-  if DirPath = '' then Exit;
+  if dirPath = '' then Exit;
 
-  if StrIndexOf(DirPath, PathDelim) <> -1 then
-    Result := copy(DirPath, StrLastIndexOf(DirPath, PathDelim) + 2);
+  if StrIndexOf(dirPath, PathDelim) <> -1 then
+    Result := copy(dirPath, StrLastIndexOf(dirPath, PathDelim) + 2)
+  else
+    Result := dirPath;
 end;
 
 

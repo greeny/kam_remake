@@ -518,9 +518,6 @@ type
 
   TKMAllianceType = (atEnemy, atAlly);
 
-  TKMapFolder = (mfSP, mfMP, mfDL);
-  TKMapFolderSet = set of TKMapFolder;
-
 const
   FOG_OF_WAR_MIN  = 80;           //Minimum value for explored but FOW terrain, MIN/ACT determines FOW darkness
   FOG_OF_WAR_ACT  = 160;          //Until this value FOW is not rendered at all
