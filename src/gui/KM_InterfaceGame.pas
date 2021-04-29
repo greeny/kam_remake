@@ -30,6 +30,7 @@ type
     function IsDragScrollingAllowed: Boolean; virtual;
     function GetHintPositionBase: TKMPoint; override;
     function GetHintFont: TKMFont; override;
+    function GetHintKind: TKMHintKind; override;
 
     function GetToolBarWidth: Integer; virtual; abstract;
   public
@@ -219,13 +220,19 @@ end;
 
 function TKMUserInterfaceGame.GetHintPositionBase: TKMPoint;
 begin
-  Result := KMPoint(GetToolBarWidth, Panel_Main.Height);
+  Result := KMPoint(GetToolBarWidth + 35, Panel_Main.Height);
 end;
 
 
 function TKMUserInterfaceGame.GetHintFont: TKMFont;
 begin
   Result := fntOutline;
+end;
+
+
+function TKMUserInterfaceGame.GetHintKind: TKMHintKind;
+begin
+  Result := hkStatic;
 end;
 
 

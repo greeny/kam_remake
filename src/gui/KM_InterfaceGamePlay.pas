@@ -1144,6 +1144,7 @@ begin
     Radio_PlayersColorMode.OnChange := Replay_PlayersColorModeClick;
 
     Dropbox_ReplayFOW := TKMDropList.Create(Panel_ReplayFOW, 0, 30, 185, 20, fntMetal, '', bsGame, False, 0.5);
+    Dropbox_ReplayFOW.ShowHintWhenShort := True;
     Dropbox_ReplayFOW.Hint := gResTexts[TX_REPLAY_PLAYER_PERSPECTIVE];
     Dropbox_ReplayFOW.OnChange := ReplayClick;
     Dropbox_ReplayFOW.DropCount := MAX_HANDS; //There could be only AI hands as well, not only Lobby players

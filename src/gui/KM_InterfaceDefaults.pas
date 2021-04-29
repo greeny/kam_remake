@@ -26,11 +26,32 @@ type
     Name: UnicodeString;
   end;
 
+  TKMHintStage = (hsFadeIn, hsShown, hsReset);
+
 
   TKMUserInterfaceCommon = class
   private
-    fPrevHint: TObject;
+//    fDbgHintX: Integer;
+//    fDbgHintY: Integer;
+    fHintOver: TKMControl;
+    fHintPrevOver: TKMControl;
+    fHintPrepareShowTick: Cardinal;
+    fHintPrepareResetTick: Cardinal;
+    fHintVisible: Boolean;
+    fHintCtrl: TKMControl;
+    fHintStage: TKMHintStage;
+
+//    fHintDebug: TKMShape;
+
+    fPrevHint: TKMControl;
     fPrevHintMessage: UnicodeString;
+
+    procedure UpdateHintControlsPos;
+    procedure PaintHint;
+    procedure UpdateHint(aTickCount: Cardinal);
+
+    function GetHintActualKind: TKMHintKind;
+    function GetHintActualFont: TKMFont;
   protected
     fMyControls: TKMMasterControl;
     Panel_Main: TKMPanel;
@@ -43,6 +64,7 @@ type
 
     function GetHintPositionBase: TKMPoint; virtual; abstract;
     function GetHintFont: TKMFont; virtual; abstract;
+    function GetHintKind: TKMHintKind; virtual; abstract;
   public
     constructor Create(aScreenX, aScreenY: Word);
     destructor Destroy; override;
@@ -57,7 +79,7 @@ type
     //Child classes don't pass these events to controls depending on their state
     procedure MouseDown(Button: TMouseButton; Shift: TShiftState; X,Y: Integer); virtual;
     procedure MouseMove(Shift: TShiftState; X,Y: Integer); overload;
-    procedure MouseMove(Shift: TShiftState; X,Y: Integer; var aHandled: Boolean); overload; virtual; abstract;
+    procedure MouseMove(Shift: TShiftState; X,Y: Integer; var aHandled: Boolean); overload; virtual;
     procedure MouseUp(Button: TMouseButton; Shift: TShiftState; X,Y: Integer); virtual; abstract;
     procedure MouseWheel(Shift: TShiftState; WheelSteps: Integer; X,Y: Integer; var aHandled: Boolean); virtual;
     procedure Resize(X,Y: Word); virtual;
@@ -100,7 +122,8 @@ var
 
 implementation
 uses
-  SysUtils, KM_Resource, KM_ResKeys, KM_RenderUI, KM_Defaults, KM_DevPerfLog, KM_DevPerfLogTypes,
+  SysUtils, Math,
+  KM_Resource, KM_ResKeys, KM_RenderUI, KM_Defaults, KM_DevPerfLog, KM_DevPerfLogTypes,
   KM_Music,
   KM_Sound,
   KM_GameSettings,
@@ -118,7 +141,7 @@ begin
   Panel_Main := TKMPanel.Create(fMyControls, 0, 0, aScreenX, aScreenY);
 
   // Controls without a hint will reset the Hint to ''
-  fMyControls.OnHint := DisplayHint;
+//  fMyControls.OnHint := DisplayHint;
 end;
 
 
@@ -142,7 +165,7 @@ begin
   Label_Hint := TKMLabel.Create(Panel_Main, hintBase.X + 40, hintBase.Y - 21, 0, 0, '', GetHintFont, taLeft);
 
   // Controls without a hint will reset the Hint to ''
-  fMyControls.OnHint := DisplayHint;
+//  fMyControls.OnHint := DisplayHint;
 end;
 
 
@@ -153,18 +176,18 @@ end;
 
 
 procedure TKMUserInterfaceCommon.DisplayHint(Sender: TObject);
-var
-  txtSize: TKMPoint;
 begin
   if (Label_Hint = nil) or (Bevel_HintBG = nil) then
     Exit;
 
-  if (fPrevHint = nil) and (Sender = nil) then Exit; //in this case there is nothing to do
+  if (fPrevHint = nil) and (Sender = nil) then Exit; // In this case there is nothing to do
 
+  // Hint didn't change (not only Hint object, but also Hint message didn't change)
   if (fPrevHint <> nil) and (Sender = fPrevHint)
-    and (TKMControl(fPrevHint).Hint = fPrevHintMessage) then Exit; // Hint didn't change (not only Hint object, but also Hint message didn't change)
+    and (TKMControl(fPrevHint).Hint = fPrevHintMessage) then Exit;
 
-  if (Sender = Label_Hint) or (Sender = Bevel_HintBG) then Exit; // When previous Hint obj is covered by Label_Hint or Bevel_HintBG ignore it.
+  // When previous Hint obj is covered by Label_Hint or Bevel_HintBG ignore it
+  if (Sender = Label_Hint) or (Sender = Bevel_HintBG) then Exit;
 
   if (Sender = nil) or (TKMControl(Sender).Hint = '') then
   begin
@@ -178,16 +201,14 @@ begin
     if SHOW_CONTROLS_ID then
       Label_Hint.Caption := Label_Hint.Caption + ' ' + TKMControl(Sender).GetIDsStr;
 
-    txtSize := gRes.Fonts[Label_Hint.Font].GetTextSize(Label_Hint.Caption);
-    Bevel_HintBG.Width := 10 + txtSize.X;
-    Bevel_HintBG.Height := 2 + txtSize.Y;
-    Bevel_HintBG.Top := GetHintPositionBase.Y - Bevel_HintBG.Height - 2;
+    Bevel_HintBG.Width := 10 + Label_Hint.TextSize.X;
+    Bevel_HintBG.Height := 2 + Label_Hint.TextSize.Y;
+    UpdateHintControlsPos;
     Bevel_HintBG.Show;
-    Label_Hint.Top := Bevel_HintBG.Top + 2;
     fPrevHintMessage := TKMControl(Sender).Hint;
   end;
 
-  fPrevHint := Sender;
+//  fPrevHint := Sender;
 end;
 
 
@@ -291,11 +312,32 @@ begin
 end;
 
 
+procedure TKMUserInterfaceCommon.UpdateHintControlsPos;
+//var
+//  hintBase: TKMPoint;
+//  right: Integer;
+begin
+//  hintBase := GetHintPositionBase;
+
+//  right := Min(Bevel_HintBG.Parent.Width, hintBase.X + Bevel_HintBG.Width);
+//  Bevel_HintBG.Left := Max(0, right - Bevel_HintBG.Width);
+//  Bevel_HintBG.Top := hintBase.Y - Bevel_HintBG.Height - 2;
+//  Label_Hint.Left := Bevel_HintBG.Left + 5;
+//  Label_Hint.Top := Bevel_HintBG.Top + 2;
+end;
+
+
 procedure TKMUserInterfaceCommon.MouseMove(Shift: TShiftState; X, Y: Integer);
 var
   mouseMoveHandled: Boolean;
 begin
   MouseMove(Shift, X, Y, mouseMoveHandled);
+end;
+
+
+procedure TKMUserInterfaceCommon.MouseMove(Shift: TShiftState; X,Y: Integer; var aHandled: Boolean);
+begin
+  UpdateHintControlsPos;
 end;
 
 
@@ -306,20 +348,20 @@ end;
 
 
 procedure TKMUserInterfaceCommon.Resize(X, Y: Word);
-var
-  hintBase: TKMPoint;
+//var
+//  hintBase: TKMPoint;
 begin
   Panel_Main.Width := X;
   Panel_Main.Height := Y;
+//
+//  if (Bevel_HintBG = nil) or (Label_Hint = nil) then
+//    Exit;
 
-  if (Bevel_HintBG = nil) or (Label_Hint = nil) then
-    Exit;
-
-  hintBase := GetHintPositionBase;
-  Bevel_HintBG.Left := hintBase.X + 35;
-  Bevel_HintBG.Top := hintBase.Y - 23;
-  Label_Hint.Left := hintBase.X + 40;
-  Label_Hint.Top := hintBase.Y - 21;
+//  hintBase := GetHintPositionBase;
+//  Bevel_HintBG.Left := hintBase.X + 35;
+//  Bevel_HintBG.Top := hintBase.Y - 23;
+//  Label_Hint.Left := hintBase.X + 40;
+//  Label_Hint.Top := hintBase.Y - 21;
 end;
 
 
@@ -328,6 +370,213 @@ begin
   inherited;
 
   fMyControls.UpdateState(aTickCount);
+  UpdateHint(aTickCount);
+end;
+
+
+procedure TKMUserInterfaceCommon.UpdateHint(aTickCount: Cardinal);
+const
+  FADE_IN_TIME = 20;
+  FADE_RESET_TIME = 10;
+//var
+//  hintBase: TKMPoint;
+begin
+  fHintOver := fMyControls.CtrlOver;
+
+  case fHintStage of
+    hsFadeIn: // Hint was hidden a long time ago
+              begin
+                // If mouse moved to other control then reset fade-in timer
+                if fHintPrevOver <> fHintOver then
+                  fHintPrepareShowTick := aTickCount;
+                // Mouse is on the same control for a long time
+                if (fHintOver <> nil) and (fHintOver.Hint <> '')
+                and (((aTickCount - fHintPrepareShowTick) >= FADE_IN_TIME) {or (fHintOver is TKMHint)}
+                    or (GetHintKind = hkStatic)) then
+                begin
+                  // Display hint
+//                  hintBase := GetHintPositionBase;
+//                  fDbgHintX := hintBase.X;
+//                  fDbgHintY := hintBase.Y;
+                  fHintCtrl := fHintOver;
+                  fHintVisible := True;
+
+                  // Set stage when hint is visible
+                  fHintStage := hsShown;
+                end;
+              end;
+    hsShown:  // Hint is visible
+              begin
+                // If control loses hover we must hide hint
+                if (fHintOver = nil) or (fHintOver <> fHintCtrl) then
+                begin
+                  // Hide hint
+//                  fDbgHintX := MaxInt;
+//                  fDbgHintY := MaxInt;
+                  fHintCtrl := nil;
+                  fHintVisible := False;
+
+                  // Launch fade-in resetting timer
+                  fHintPrepareResetTick := aTickCount;
+
+                  // Set stage when hint was hidden recently
+                  fHintStage := hsReset;
+                end;
+              end;
+    hsReset:  // Hint was hidden recently
+              begin
+                // If no control is hovered a long time we must activate fade-in logic
+                if (aTickCount - fHintPrepareResetTick) >= FADE_RESET_TIME then
+                begin
+                  fHintPrepareShowTick := aTickCount;
+
+                  // Set stage when hint was hidden a long time ago
+                  fHintStage := hsFadeIn;
+                end
+                else
+                // Mouse was on another control in 'fade reset' period, we must show hint immediately
+                if (fHintOver <> nil) and (fHintOver.Hint <> '')  then
+                begin
+//                  hintBase := GetHintPositionBase;
+//                  fDbgHintX := hintBase.X;
+//                  fDbgHintY := hintBase.Y;
+                  fHintCtrl := fHintOver;
+                  fHintVisible := True;
+
+                  // Set stage when hint is visible
+                  fHintStage := hsShown;
+                end;
+              end;
+  end;
+
+  // Save hovered control to compare it on next tick
+  fHintPrevOver := fHintOver;
+end;
+
+
+function TKMUserInterfaceCommon.GetHintActualFont: TKMFont;
+begin
+  Result := GetHintFont;
+
+  if fHintCtrl = nil then Exit;
+
+  if GetHintActualKind = hkCellEnlarge then
+    Result := fHintCtrl.HintFont;
+end;
+
+
+function TKMUserInterfaceCommon.GetHintActualKind: TKMHintKind;
+begin
+  Result := GetHintKind;
+
+  if fHintCtrl = nil then Exit;
+
+  if fHintCtrl.HintKind = hkCellEnlarge then
+    Result := hkCellEnlarge; // For lists and columnboxes we should use this one in any case
+end;
+
+
+procedure TKMUserInterfaceCommon.PaintHint;
+const
+  PAD = 8;
+  FONT_Y_FIX = 3;
+  MARGIN = 2;
+var
+  right: Integer;
+  hintBase, hintTxtOffset: TKMPoint;
+  hintBackRect: TKMRect;
+begin
+  if fHintCtrl = nil then Exit;
+
+//  if (Label_Hint = nil) or (Bevel_HintBG = nil) then
+//    Exit;
+//
+//  if (fPrevHint = nil) and (Sender = nil) then Exit; // In this case there is nothing to do
+//
+//  // Hint didn't change (not only Hint object, but also Hint message didn't change)
+//  if (fPrevHint <> nil) and (Sender = fPrevHint)
+//    and (TKMControl(fPrevHint).Hint = fPrevHintMessage) then Exit;
+//
+//  // When previous Hint obj is covered by Label_Hint or Bevel_HintBG ignore it
+//  if (Sender = Label_Hint) or (Sender = Bevel_HintBG) then Exit;
+
+  Label_Hint.Font := GetHintActualFont;
+  Label_Hint.Caption := fHintCtrl.Hint;
+  Label_Hint.FontColor := icWhite;
+
+  if Label_Hint.TextSize.X = 0 then Exit;
+
+  Bevel_HintBG.Width := Label_Hint.TextSize.X + PAD;
+  Bevel_HintBG.Height := Label_Hint.TextSize.Y + PAD;
+
+  case GetHintActualKind of
+    hkControl:      begin
+                      Bevel_HintBG.AbsLeft := EnsureRange(fHintCtrl.AbsLeft + fHintCtrl.Width div 2 - Bevel_HintBG.Width div 2,
+                                                          MARGIN, Panel_Main.Width - Bevel_HintBG.Width - MARGIN);
+                      Bevel_HintBG.AbsTop := fHintCtrl.AbsTop - Bevel_HintBG.Height - FONT_Y_FIX;
+
+                      if Bevel_HintBG.AbsTop <= 0 then
+                        Bevel_HintBG.AbsTop := fHintCtrl.AbsTop + fHintCtrl.Height + FONT_Y_FIX;
+
+                      Label_Hint.AbsLeft := Bevel_HintBG.AbsLeft + PAD div 2;//Bevel_HintBG.Width div 2;
+                      Label_Hint.AbsTop := Bevel_HintBG.AbsTop + PAD div 2 + (FONT_Y_FIX - 1);
+                      Bevel_HintBG.SetDefBackAlpha;
+                    end;
+    hkStatic:       begin
+                      hintBase := GetHintPositionBase;
+
+                      right := Min(Bevel_HintBG.Parent.Width, hintBase.X + Bevel_HintBG.Width);
+                      Bevel_HintBG.Left := Max(0, right - Bevel_HintBG.Width);
+                      Bevel_HintBG.Top := hintBase.Y - Bevel_HintBG.Height - 2;
+                      Label_Hint.Left := Bevel_HintBG.Left + 5;
+                      Label_Hint.Top := Bevel_HintBG.Top + 2;
+                      Bevel_HintBG.SetDefBackAlpha;
+                    end;
+    hkCellEnlarge:  begin
+                      hintTxtOffset := fHintCtrl.HintTxtOffset;
+                      hintBackRect := fHintCtrl.HintBackRect;
+
+                      Bevel_HintBG.AbsLeft := fHintCtrl.AbsLeft + hintBackRect.Left;
+                      Bevel_HintBG.AbsTop := fHintCtrl.AbsTop + hintBackRect.Top;
+                      Bevel_HintBG.Height := hintBackRect.Height; //Max(Bevel_HintBG.Height, hintBackRect.Height);
+
+                      if fHintCtrl.HintSelected then
+
+                      TKMRenderUI.WriteShape(Bevel_HintBG.AbsLeft, Bevel_HintBG.AbsTop,
+                                             Bevel_HintBG.Width, Bevel_HintBG.Height, icTransparent, icWhite);
+
+                      Label_Hint.AbsLeft := fHintCtrl.AbsLeft + hintTxtOffset.X;
+                      Label_Hint.AbsTop := fHintCtrl.AbsTop + hintTxtOffset.Y;
+                      Label_Hint.FontColor := fHintCtrl.HintColor;
+
+
+
+                      Bevel_HintBG.BackAlpha := 1;
+                    end;
+  end;
+
+//  Label_Hint.AbsLeft := Bevel_HintBG.AbsLeft + PAD div 2;//Bevel_HintBG.Width div 2;
+//  Label_Hint.AbsTop := Bevel_HintBG.AbsTop + PAD div 2 + (FONT_Y_FIX - 1);
+
+//  if DBG_UI_HINT_POS then
+//  begin
+//    fHintDebug.AbsLeft := fHintX;
+//    fHintDebug.AbsTop := fHintY;
+//    fHintDebug.Show;
+//    fHintDebug.Paint;
+//    fHintDebug.Hide;
+//  end;
+
+  Bevel_HintBG.Show;
+  Label_Hint.Show;
+
+  Bevel_HintBG.Paint;
+  Label_Hint.Paint;
+
+  Bevel_HintBG.Hide;
+  Label_Hint.Hide;
+
+  fPrevHint := fHintCtrl;
 end;
 
 
@@ -337,6 +586,9 @@ begin
   gPerfLogs.SectionEnter(psFrameGui);
   {$ENDIF}
   fMyControls.Paint;
+
+  // Hint should be painted above everything
+  PaintHint;
   {$IFDEF PERFLOG}
   gPerfLogs.SectionLeave(psFrameGui);
   {$ENDIF}
