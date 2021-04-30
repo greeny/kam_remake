@@ -118,6 +118,7 @@ begin
                                [0, 22, 440, 580, 805, 885]);
   ColumnBox_Replays.Anchors := [anLeft,anTop,anBottom];
   ColumnBox_Replays.ShowHintWhenShort := True;
+  ColumnBox_Replays.HintBackColor := TKMColor3f.NewB(87, 72, 37);
   ColumnBox_Replays.SearchColumn := 1;
   ColumnBox_Replays.ColumnIdForScroll := 2;
   ColumnBox_Replays.OnChange := Replays_ListClick;

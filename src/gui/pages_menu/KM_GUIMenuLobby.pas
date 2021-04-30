@@ -572,6 +572,7 @@ begin
       DropCol_Maps.DropCount := 19;
       InitDropColMapsList;
       DropCol_Maps.ShowHintWhenShort := True;
+      DropCol_Maps.HintBackColor := TKMColor3f.NewB(87, 72, 37);
       DropCol_Maps.OnShowList := MapList_OnShow;
       DropCol_Maps.List.OnColumnClick := MapColumnClick;
       DropCol_Maps.List.SearchColumn := 1;

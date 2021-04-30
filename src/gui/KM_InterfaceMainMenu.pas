@@ -42,8 +42,6 @@ type
     fMenuSingleMap: TKMMenuSingleMap;
     fMenuSinglePlayer: TKMMenuSinglePlayer;
 
-    fMousePos: TKMPoint;
-
     fMenuPage: TKMMenuPageCommon;
   protected
     Panel_Menu: TKMPanel;

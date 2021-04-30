@@ -234,6 +234,7 @@ begin
     ColumnBox_Servers.Anchors := [anLeft, anTop, anBottom];
     ColumnBox_Servers.Focusable := True;
     ColumnBox_Servers.ShowHintWhenShort := True;
+    ColumnBox_Servers.HintBackColor := TKMColor3f.NewB(87, 72, 37);
     ColumnBox_Servers.SetColumns(fntOutline,
                                  ['','', gResTexts[TX_MP_MENU_SERVERLIST_NAME], gResTexts[TX_MP_MENU_SERVERLIST_STATE],
                                          gResTexts[TX_MP_MENU_SERVERLIST_PLAYERS], gResTexts[TX_MP_MENU_SERVERLIST_PING]],

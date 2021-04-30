@@ -98,6 +98,7 @@ begin
     ColumnBox_Load.OnChange := Load_ListClick;
     ColumnBox_Load.OnDoubleClick := LoadClick;
     ColumnBox_Load.ShowHintWhenShort := True;
+    ColumnBox_Load.HintBackColor := TKMColor3f.NewB(87, 72, 37);
 
     Button_Load := TKMButton.Create(Panel_Load, 200, 555, 350, 30, gResTexts[TX_MENU_LOAD_LOAD], bsMenu);
     Button_Load.Anchors := [anLeft,anBottom];

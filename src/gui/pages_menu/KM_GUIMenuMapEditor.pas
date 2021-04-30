@@ -258,6 +258,7 @@ begin
       ColumnBox_MapEd.OnDoubleClick := LoadClick;
       ColumnBox_MapEd.OnCellClick := ColumnBoxMaps_CellClick;
       ColumnBox_MapEd.ShowHintWhenShort := True;
+      ColumnBox_MapEd.HintBackColor := TKMColor3f.NewB(149, 128, 69);//(87, 72, 37);
 
       Button_Load := TKMButton.Create(Panel_MapEdLoad, 0, 606, 440, 30, gResTexts[TX_MENU_MAP_LOAD_EXISTING], bsMenu);
       Button_Load.Anchors := [anLeft, anBottom];

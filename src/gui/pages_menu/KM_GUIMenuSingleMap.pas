@@ -174,6 +174,7 @@ begin
                                                   fntMetal, bsMenu);
     ColumnBox_Maps.Anchors := [anTop, anBottom];
     ColumnBox_Maps.ShowHintWhenShort := True;
+    ColumnBox_Maps.HintBackColor := TKMColor3f.NewB(87, 72, 37);
     ColumnBox_Maps.SetColumns(fntOutline, ['', '', gResTexts[TX_MENU_MAP_TITLE], gResTexts[TX_MENU_MAP_SIZE]], [0, 50, 100, 380]);
     ColumnBox_Maps.Columns[2].Font := fntMetal;
     ColumnBox_Maps.Columns[2].HintFont := fntGrey;

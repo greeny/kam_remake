@@ -159,7 +159,7 @@ uses
   KM_Hand, KM_AIDefensePos, KM_RenderUI, KM_ResFonts, KM_CommonClasses, KM_UnitWarrior,
   KM_Utils,
   KM_UnitGroupTypes,
-  KM_ResTypes;
+  KM_ResTypes, KM_CommonTypes;
 
 
 { TKMapEdInterface }
@@ -304,6 +304,7 @@ begin
     ListBox_History := TKMListBox.Create(PopUp_History, 10, 10, PopUp_History.Width - 20, PopUp_History.Height - 50, fntMetal, bsGame);
     ListBox_History.AutoHideScrollBar := True;
     ListBox_History.ShowHintWhenShort := True;
+    ListBox_History.HintBackColor := TKMColor3f.NewB(87, 72, 37);
     ListBox_History.OnChange := History_ListChange;
     ListBox_History.OnDoubleClick := History_JumpTo;
 
@@ -1518,4 +1519,5 @@ end;
 
 
 end.
+
 

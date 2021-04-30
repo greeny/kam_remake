@@ -233,10 +233,12 @@ type
     function GetHintKind: TKMHintKind; virtual;
     function GetHintFont: TKMFont; virtual;
     function IsHintSelected: Boolean; virtual;
-    function GetHintColor: TColor4; virtual;
+    function GetHintBackColor: TKMColor3f; virtual;
+    function GetHintTextColor: TColor4; virtual;
     function GetHintBackRect: TKMRect; virtual;
-    function GetHintTxtOffset: TKMPoint; virtual;
+    function GetHintTextOffset: TKMPoint; virtual;
     procedure SetHint(const aHint: UnicodeString); virtual;
+    procedure SetHintBackColor(const aValue: TKMColor3f); virtual;
 
     procedure SetPaintLayer(aPaintLayer: Integer);
 
@@ -279,9 +281,10 @@ type
     property HintKind: TKMHintKind read GetHintKind;
     property HintFont: TKMFont read GetHintFont;
     property HintSelected: Boolean read IsHintSelected;
-    property HintColor: TColor4 read GetHintColor;
+    property HintBackColor: TKMColor3f read GetHintBackColor write SetHintBackColor;
+    property HintTextColor: TColor4 read GetHintTextColor;
     property HintBackRect: TKMRect read GetHintBackRect;
-    property HintTxtOffset: TKMPoint read GetHintTxtOffset;
+    property HintTextOffset: TKMPoint read GetHintTextOffset;
 
     property MouseWheelStep: Integer read fMouseWheelStep write fMouseWheelStep;
 
@@ -405,10 +408,12 @@ type
   public
     BackAlpha: Single;
     EdgeAlpha: Single;
+    Color: TKMColor3f;
     constructor Create(aParent: TKMPanel; aLeft, aTop, aWidth, aHeight: Integer; aPaintLayer: Integer = 0);
 
     procedure SetDefBackAlpha;
     procedure SetDefEdgeAlpha;
+    procedure SetDefColor;
 
     procedure Paint; override;
   end;
@@ -1191,6 +1196,7 @@ type
 
   TKMSearchableList = class(TKMControl)
   private
+    fHintBackColor: TKMColor3f;
     fSearch: UnicodeString; //Contains user input characters we should search for
     fLastKeyTime: Cardinal;
   protected
@@ -1198,6 +1204,8 @@ type
     fOnChange: TNotifyEvent;
     function GetHintKind: TKMHintKind; override;
     function GetHintFont: TKMFont; override;
+    function GetHintBackColor: TKMColor3f; override;
+    procedure SetHintBackColor(const aValue: TKMColor3f); override;
     function IsHintSelected: Boolean; override;
 
     function CanSearch: Boolean; virtual; abstract;
@@ -1213,6 +1221,8 @@ type
     function KeyEventHandled(Key: Word; Shift: TShiftState): Boolean; virtual;
     function CanChangeSelection: Boolean; virtual;
   public
+    constructor Create(aParent: TKMPanel; aLeft, aTop, aWidth, aHeight: Integer; aPaintLayer: Integer = 0);
+
     procedure SetTopIndex(aIndex: Integer; aStayOnList: Boolean); overload;
     property ItemIndex: Integer read GetItemIndex write SetItemIndex;
     property TopIndex: Integer read GetTopIndex write SetTopIndex;
@@ -1266,7 +1276,7 @@ type
 
     function GetHint: UnicodeString; override;
     function GetHintBackRect: TKMRect; override;
-    function GetHintTxtOffset: TKMPoint; override;
+    function GetHintTextOffset: TKMPoint; override;
 
     //TKMSearchableList
     function CanSearch: Boolean; override;
@@ -1451,9 +1461,9 @@ type
     procedure DoPaintLine(aIndex: Integer; X,Y: Integer; PaintWidth: Integer; aAllowHighlight: Boolean = True); overload;
     procedure DoPaintLine(aIndex: Integer; X, Y: Integer; PaintWidth: Integer; aColumnsToShow: array of Boolean; aAllowHighlight: Boolean = True); overload;
     function GetHint: UnicodeString; override;
-    function GetHintColor: TColor4; override;
+    function GetHintTextColor: TColor4; override;
     function GetHintBackRect: TKMRect; override;
-    function GetHintTxtOffset: TKMPoint; override;
+    function GetHintTextOffset: TKMPoint; override;
 
     // TKMSearchableList methods implementation
     function CanSearch: Boolean; override;
@@ -2335,19 +2345,25 @@ begin
 end;
 
 
+function TKMControl.GetHintBackColor: TKMColor3f;
+begin
+  Result := COLOR3F_BLACK;
+end;
+
+
 function TKMControl.GetHintBackRect: TKMRect;
 begin
   Result := KMRECT_ZERO;
 end;
 
 
-function TKMControl.GetHintColor: TColor4;
+function TKMControl.GetHintTextColor: TColor4;
 begin
   Result := icWhite;
 end;
 
 
-function TKMControl.GetHintTxtOffset: TKMPoint;
+function TKMControl.GetHintTextOffset: TKMPoint;
 begin
   Result := KMPOINT_ZERO;
 end;
@@ -2357,6 +2373,12 @@ procedure TKMControl.SetHint(const aHint: UnicodeString);
 begin
   //fHint := StringReplace(aHint, '|', ' ', [rfReplaceAll]); //Not sure why we were need to replace | here...
   fHint := aHint;
+end;
+
+
+procedure TKMControl.SetHintBackColor(const aValue: TKMColor3f);
+begin
+  // Do nothing
 end;
 
 
@@ -3399,11 +3421,16 @@ begin
 end;
 
 
+procedure TKMBevel.SetDefColor;
+begin
+  Color := COLOR3F_BLACK; //Default value
+end;
+
 
 procedure TKMBevel.Paint;
 begin
   inherited;
-  TKMRenderUI.WriteBevel(AbsLeft, AbsTop, Width, Height, EdgeAlpha, BackAlpha, PaintingBaseLayer);
+  TKMRenderUI.WriteBevel(AbsLeft, AbsTop, Width, Height, Color, EdgeAlpha, BackAlpha, PaintingBaseLayer);
 end;
 
 
@@ -4598,7 +4625,7 @@ end;
 { TKMFilenameEdit }
 constructor TKMFilenameEdit.Create(aParent: TKMPanel; aLeft, aTop, aWidth, aHeight: Integer; aFont: TKMFont; aSelectable: Boolean = True);
 const
-  MAX_SAVENAME_LENGTH = 50;
+  MAX_SAVENAME_LENGTH = 100;
 begin
   inherited Create(aParent, aLeft, aTop, aWidth, aHeight, aFont, aSelectable);
 
@@ -7503,7 +7530,7 @@ begin
 end;
 
 
-function TKMListBox.GetHintTxtOffset: TKMPoint;
+function TKMListBox.GetHintTextOffset: TKMPoint;
 begin
   if fMouseOverRow = -1 then Exit(KMPOINT_ZERO);
 
@@ -7878,6 +7905,14 @@ end;
 
 
 { TKMSearchableList }
+constructor TKMSearchableList.Create(aParent: TKMPanel; aLeft, aTop, aWidth, aHeight, aPaintLayer: Integer);
+begin
+  inherited;
+
+  fHintBackColor := COLOR3F_BLACK;
+end;
+
+
 procedure TKMSearchableList.KeyPress(Key: Char);
 var
   I, oldIndex: Integer;
@@ -7927,6 +7962,18 @@ end;
 function TKMSearchableList.CanChangeSelection: Boolean;
 begin
   Result := True;
+end;
+
+
+function TKMSearchableList.GetHintBackColor: TKMColor3f;
+begin
+  Result := fHintBackColor;
+end;
+
+
+procedure TKMSearchableList.SetHintBackColor(const aValue: TKMColor3f);
+begin
+  fHintBackColor := aValue;
 end;
 
 
@@ -8642,7 +8689,7 @@ begin
 end;
 
 
-function TKMColumnBox.GetHintColor: TColor4;
+function TKMColumnBox.GetHintTextColor: TColor4;
 begin
   if fMouseOverCell = KMPOINT_INVALID_TILE then Exit(inherited);
 
@@ -8666,7 +8713,7 @@ begin
 end;
 
 
-function TKMColumnBox.GetHintTxtOffset: TKMPoint;
+function TKMColumnBox.GetHintTextOffset: TKMPoint;
 var
   textSize: TKMPoint;
 begin

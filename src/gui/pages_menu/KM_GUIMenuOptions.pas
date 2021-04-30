@@ -336,6 +336,7 @@ begin
         ColumnBox_OptionsKeys.Anchors := [anLeft,anTop,anBottom];
         ColumnBox_OptionsKeys.ShowLines := True;
         ColumnBox_OptionsKeys.ShowHintWhenShort := True;
+        ColumnBox_OptionsKeys.HintBackColor := TKMColor3f.NewB(87, 72, 37);
         ColumnBox_OptionsKeys.PassAllKeys := True;
         ColumnBox_OptionsKeys.OnChange := KeysClick;
         ColumnBox_OptionsKeys.OnKeyUp := KeysUpdate;
