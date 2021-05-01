@@ -1441,8 +1441,12 @@ procedure TKMNetworking.PlayerDisconnected(aSenderIndex: TKMNetHandleIndex; aLas
 var
   PlayerIndex: Integer;
 begin
-  gLog.AddTime(Format('PlayerDisconnected. LastSentCommandsTick = %d', [aLastSentCommandsTick]));
   PlayerIndex := fNetPlayers.ServerToLocal(aSenderIndex);
+  gLog.AddTime(Format('PlayerDisconnected [netPlayer %d [%s] HandID %d]. LastSentCommandsTick = %d',
+                      [PlayerIndex,
+                       fNetPlayers[PlayerIndex].Nikname,
+                       fNetPlayers[PlayerIndex].HandIndex,
+                       aLastSentCommandsTick]));
   case fNetPlayerKind of
     lpkHost:   begin
                   fFileSenderManager.ClientDisconnected(aSenderIndex);
@@ -1456,7 +1460,7 @@ begin
                       OnJoinerDropped(fNetPlayers[PlayerIndex].HandIndex);
                   end;
 
-                  if fNetGameState in [lgsLoading, lgsGame] then
+                  if fNetGameState in [lgsLoading, lgsGame] then // lgsReconnecting ?
                     fNetPlayers.DropPlayer(aSenderIndex, aLastSentCommandsTick)
                   else
                     fNetPlayers.RemServerPlayer(aSenderIndex);

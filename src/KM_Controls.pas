@@ -1816,6 +1816,7 @@ type
     procedure SetLeft(aValue: Integer); override;
     procedure SetTop(aValue: Integer); override;
   public
+    ItemsPanel: TKMPanel;
     DragEnabled: Boolean;
     ImageBG, ImageClose: TKMImage;
     Caption: UnicodeString;
@@ -8972,21 +8973,23 @@ constructor TKMPopUpPanel.Create(aParent: TKMPanel; aWidth, aHeight: Integer; co
                                  aImageType: TKMPopUpBGImageType = pubgitYellow; aShowBevel: Boolean = True;
                                  aShowShadeBevel: Boolean = True);
 var
-  imgWPad, imgTop, topMargin, l, t, w, h: Integer;
+  imgWPad, imgTop, margin, l, t, w, h: Integer;
 begin
-  topMargin := 0;
+  margin := 0;
   case aImageType of
-    pubgitGray:         topMargin := 20;
-    pubgitYellow:       topMargin := 25;
-    pubgitScrollWCross: topMargin := 20;
+    pubgitGray:         margin := 20;
+    pubgitYellow:       margin := 25;
+    pubgitScrollWCross: margin := 20;
   end;
 
-  l := Max(0, (aParent.Width div 2) - (aWidth div 2));
-  t := Max(topMargin, (aParent.Height div 2) - (aHeight div 2));
+  l := Max(0, (aParent.Width - aWidth) div 2);
+  t := Max(0, (aParent.Height - aHeight) div 2);
   w := Min(aParent.Width, aWidth);
   h := Min(aParent.Height, aHeight);
 
   inherited Create(aParent, l, t, w, h);
+
+  t := Max(margin, (aParent.Height - aHeight) div 2);
 
   fBGImageType := aImageType;
 
@@ -8998,27 +9001,46 @@ begin
   if aShowShadeBevel then
     BevelShade := TKMBevel.Create(Self, -2000,  -2000, 5000, 5000);
 
+  ImageBG := TKMImage.Create(Self, 0, 0, aWidth, aHeight, 15, rxGuiMain);
+
   case fBGImageType of
-    pubgitGray:    ImageBG := TKMImage.Create(Self, -topMargin, -50, aWidth + 40, aHeight + 70,  15, rxGuiMain);
-    pubgitYellow:  ImageBG := TKMImage.Create(Self, -topMargin, -80, aWidth + 50, aHeight + 130, 18, rxGuiMain);
+    pubgitGray:   begin
+                    ImageBG.TexId := 15;
+                    t := margin + 5 + (Height div 20);
+                    ItemsPanel := TKMPanel.Create(Self, margin, t, w - 2*margin, h - t - 20);
+                  end;
+    pubgitYellow: begin
+                    ImageBG.TexId := 18;
+                    t := margin + 5 + (Height div 20);
+                    ItemsPanel := TKMPanel.Create(Self, margin, t, w - 2*margin, h - t - 20);
+                  end;
     pubgitScrollWCross:
       begin
+        ItemsPanel := TKMPanel.Create(Self, margin, 80, w, h);
+
         imgTop := -(aHeight div 10) - 10;
         imgWPad := (aWidth div 30) + 5;
-        ImageBG := TKMImage.Create(Self, -imgWPad, imgTop, aWidth + 2 * imgWPad, aHeight + (aHeight div 7) + 20,  409);
-        ImageClose := TKMImage.Create(Self, -imgWPad + (aWidth + 2*imgWPad) - ((aWidth + 2*imgWPad) div 10) - 16, 24 + imgTop, 31, 30, 52);
+        ImageBG := TKMImage.Create(Self, 0, 0, aWidth, aHeight,  409);
+        ImageClose := TKMImage.Create(Self, (aWidth + 2*imgWPad) - ((aWidth + 2*imgWPad) div 10) - 16, 24, 31, 30, 52);
         ImageClose.Anchors := [anTop, anRight];
         ImageClose.Hint := gResTexts[TX_MSG_CLOSE_HINT];
         ImageClose.OnClick := Close;
         ImageClose.HighlightOnMouseOver := True;
       end;
+    else
+      begin
+        ItemsPanel := TKMPanel.Create(Self, margin, 80, w, h);
+      end;
+  end;
+
+  ItemsPanel.AnchorsStretch;
+  if aShowBevel then
+  begin
+    BevelBG := TKMBevel.Create(ItemsPanel, 0, 0, ItemsPanel.Width, ItemsPanel.Height);
+    BevelBG.AnchorsStretch;
   end;
 
   ImageBG.ImageStretch;
-
-  BevelBG := nil;
-  if aShowBevel then
-    BevelBG := TKMBevel.Create(Self, 0, 0, aWidth, aHeight);
 
   AnchorsCenter;
   Hide;
@@ -9100,33 +9122,44 @@ procedure TKMPopUpPanel.PaintPanel(aPaintLayer: Integer);
 begin
   inherited;
 
-  TKMRenderUI.WriteText(AbsLeft, AbsTop - (Height div 20) + CapOffsetY, Width, Caption, Font, taCenter, FontColor);
+  TKMRenderUI.WriteText(AbsLeft, AbsTop + (Height div 20) + CapOffsetY, Width, Caption, Font, taCenter, FontColor);
 end;
 
 
 procedure TKMPopUpPanel.SetHeight(aValue: Integer);
+var
+  diff: Integer;
 begin
+  diff := aValue - Height;
   inherited;
 
+//  ItemsPanel.Height := ItemsPanel.Height + diff;
   UpdateSizes;
 end;
 
 
 procedure TKMPopUpPanel.SetLeft(aValue: Integer);
 begin
-  inherited SetLeft(EnsureRange(aValue, Max(0, -ImageBG.Left - 5), fMasterControl.fMasterPanel.Width - Width));
+  inherited;
+//  inherited SetLeft(EnsureRange(aValue, Max(0, -ImageBG.Left - 5), fMasterControl.fMasterPanel.Width - Width));
 end;
 
 
 procedure TKMPopUpPanel.SetTop(aValue: Integer);
 begin
-  inherited SetTop(EnsureRange(aValue, Max(0, -ImageBG.Top - 10), fMasterControl.fMasterPanel.Height - Height));
+  inherited;
+//  inherited SetTop(EnsureRange(aValue, Max(0, -ImageBG.Top - 10), fMasterControl.fMasterPanel.Height - Height));
 end;
 
 
 procedure TKMPopUpPanel.SetWidth(aValue: Integer);
+var
+  diff: Integer;
 begin
+  diff := aValue - Width;
   inherited;
+
+//  ItemsPanel.Width := ItemsPanel.Width + diff;
 
   UpdateSizes;
 end;
@@ -9137,20 +9170,20 @@ begin
   case fBGImageType of
     pubgitGray:
     begin
-      ImageBG.Width := Width + 40;
-      ImageBG.Height := Height + 70;
+      ImageBG.Width := Width;
+      ImageBG.Height := Height;
     end;
     pubgitYellow:
     begin
-      ImageBG.Width := Width + 50;
-      ImageBG.Height := Height + 140;
+      ImageBG.Width := Width;
+      ImageBG.Height := Height;
     end;
   end;
-  if BevelBG <> nil then
-  begin
-    BevelBG.Width := Width;
-    BevelBG.Height := Height;
-  end;
+//  if BevelBG <> nil then
+//  begin
+//    BevelBG.Width := Width;
+//    BevelBG.Height := Height;
+//  end;
 end;
 
 

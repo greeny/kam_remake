@@ -6,7 +6,7 @@ uses
   {$IFDEF Unix} LCLIntf, LCLType, {$ENDIF}
   Classes, Math, SysUtils,
   KM_InterfaceDefaults,
-  KM_Controls, KM_Defaults, KM_Pics;
+  KM_Controls, KM_Defaults, KM_Pics, KM_Points;
 
 
 const
@@ -19,6 +19,8 @@ type
   TKMMapEdTerrainTiles = class(TKMMapEdSubMenuPage)
   private
     fLastTile: Word;
+
+    function CalcPalettePopUpSizes: TKMPoint;
 
     procedure TilesChange(Sender: TObject);
     procedure TilesSet(aIndex: Integer);
@@ -60,7 +62,7 @@ implementation
 uses
   KM_Resource, KM_ResFonts, KM_ResTexts, KM_ResTileset, KM_ResKeys,
   KM_GameCursor, KM_RenderUI, KM_InterfaceGame,
-  KM_Utils,
+  KM_Utils, KM_CommonUtils,
   KM_ResTypes;
 
 const
@@ -88,6 +90,15 @@ const
   MAX_ROW_SIZE = 30;
 
 
+function TKMMapEdTerrainTiles.CalcPalettePopUpSizes: TKMPoint;
+begin
+  Result.X := Min(Panel_Tiles.Parent.MasterControl.MasterPanel.Width,
+                  MAX_ROW_SIZE * PAL_S + 60);
+  Result.Y := Min(Panel_Tiles.Parent.MasterControl.MasterPanel.Height,
+                 (Length(PAL_ROWS) - 1)*MAPED_TILES_Y*PAL_S + Length(PAL_ROWS) * PAL_Y_GAP + 40);
+end;
+
+
 constructor TKMMapEdTerrainTiles.Create(aParent: TKMPanel);
 const
   BTN_SIZE_S = 34;
@@ -101,7 +112,8 @@ const
 
 
 var
-  I,J,K,X,Y, lineWidthCnt, texID, palW, palH, row, index: Integer;
+  I,J,K,X,Y, lineWidthCnt, texID, {palW, palH, }row, index: Integer;
+  palettePopUpSizes: TKMPoint;
 begin
   inherited Create;
 
@@ -157,15 +169,16 @@ begin
   TilesPalette_Button.Hint := GetHintWHotKey(TX_MAPED_TERRAIN_TILES_PALETTE, kfMapedTilesPalette);
   TilesPalette_Button.OnClick := TilesPalette_ToggleVisibility;
 
-  palW := Min(aParent.MasterControl.MasterPanel.Width,
-              MAX_ROW_SIZE * PAL_S + 60);
-  palH := Min(aParent.MasterControl.MasterPanel.Height,
-             (Length(PAL_ROWS) - 1)*MAPED_TILES_Y*PAL_S + Length(PAL_ROWS) * PAL_Y_GAP + 40);
+  palettePopUpSizes := CalcPalettePopUpSizes;
 
-  Panel_TilesPalettePopup := TKMPopUpPanel.Create(aParent.MasterControl.MasterPanel, palW, palH, gResTexts[TX_MAPED_TERRAIN_TILES_PALETTE],
-                                                  pubgitYellow);//, True, False);
+  Panel_TilesPalettePopup := TKMPopUpPanel.Create(aParent.MasterControl.MasterPanel,
+                                                  palettePopUpSizes.X,
+                                                  palettePopUpSizes.Y,
+                                                  gResTexts[TX_MAPED_TERRAIN_TILES_PALETTE],
+                                                  pubgitScrollWCross);//, True, False);
   Panel_TilesPalettePopup.DragEnabled := True;
-  Panel_TilesPalettePopup.Anchors := [anTop];
+//  Panel_TilesPalettePopup.Anchors := [anTop];
+  Panel_TilesPalettePopup.AnchorsCenter;
   Panel_TilesPalettePopup.CapOffsetY := 5;
     Panel_TilesPalette := TKMScrollPanel.Create(Panel_TilesPalettePopup, 10, 5,
                                                 Panel_TilesPalettePopup.Width - 40,
@@ -226,7 +239,7 @@ begin
 
       Button_ClosePalette  := TKMButton.Create(Panel_TilesPalette, 0, (MAPED_TILES_Y + 5)*PAL_S + BTN_SIZE + 5,
                                                207, 30, gResTexts[TX_MAPED_TERRAIN_CLOSE_PALETTE], bsGame);
-      Button_ClosePalette.Anchors := [anLeft];
+//      Button_ClosePalette.Anchors := [anLeft];
       Button_ClosePalette.OnClick := TilesPalette_ToggleVisibility;
 
   Resize;
@@ -375,13 +388,19 @@ end;
 procedure TKMMapEdTerrainTiles.Resize;
 var
   {palW, }palH: Integer;
+  palettePopUpSizes: TKMPoint;
 begin
+  palettePopUpSizes := CalcPalettePopUpSizes;
 //  palW := MAX_ROW_SIZE * PAL_S + 40;
-  palH := (Length(PAL_ROWS) - 1)*MAPED_TILES_Y*PAL_S + Length(PAL_ROWS) * PAL_Y_GAP + 20;
+//  palH := (Length(PAL_ROWS) - 1)*MAPED_TILES_Y*PAL_S + Length(PAL_ROWS) * PAL_Y_GAP + 40;
 
-  Panel_TilesPalettePopup.Top    := Max(((Panel_TilesPalettePopup.Parent.Height - palH) div 2) + 20, 20);
+  Panel_TilesPalettePopup.Top    := Max(0, ((Panel_TilesPalettePopup.Parent.Height - palettePopUpSizes.Y) div 2) + 0);
 //  Panel_TilesPalettePopup.Width  := Min(palW, Panel_TilesPalettePopup.Parent.Width - 30);
-  Panel_TilesPalettePopup.Height := Min(palH, Panel_TilesPalettePopup.Parent.Height - 70);
+  Panel_TilesPalettePopup.Height := Min({palH, }palettePopUpSizes.Y, Panel_TilesPalettePopup.Parent.Height - 70);
+  Panel_TilesPalettePopup.Width := Min(palettePopUpSizes.X, Panel_TilesPalettePopup.Parent.Width - 30);
+//                                    Min3(Panel_Tiles.Parent.MasterControl.MasterPanel.Width,
+//                                        MAX_ROW_SIZE * PAL_S + 60,
+//                                        Panel_TilesPalettePopup.Parent.Width - 30);
 end;
 
 

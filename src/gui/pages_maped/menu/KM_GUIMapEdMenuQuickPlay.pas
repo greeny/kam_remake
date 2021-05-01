@@ -49,53 +49,54 @@ uses
   KM_RenderUI, KM_ResFonts, KM_ResTexts, KM_Resource, Math;
 
 const
-  PANEL_QUICKPLAY_HEIGHT = 505;
+  PANEL_QUICKPLAY_HEIGHT = 505 + 60;
 
 
 constructor TKMMapEdMenuQuickPlay.Create(aParent: TKMPanel; aOnMapTypChanged: TBooleanEvent);
 const
   CTRLS_WIDTH = 220;
+  WID = 240 + 40;
 var
   left, top: Integer;
 begin
   inherited Create;
 
-  PopUp_QuickPlay := TKMPopUpPanel.Create(aParent, 240, PANEL_QUICKPLAY_HEIGHT, gResTexts[TX_MAPED_MAP_QUICK_PLAY], pubgitGray);
+  PopUp_QuickPlay := TKMPopUpPanel.Create(aParent, WID, PANEL_QUICKPLAY_HEIGHT, gResTexts[TX_MAPED_MAP_QUICK_PLAY], pubgitGray);
 
-  PopUp_QuickPlay.Width := Math.Max(240, gRes.Fonts[PopUp_QuickPlay.Font].GetTextSize(PopUp_QuickPlay.Caption).X + 40);
-  left := (PopUp_QuickPlay.Width - CTRLS_WIDTH) div 2;
+  PopUp_QuickPlay.Width := Math.Max(WID, gRes.Fonts[PopUp_QuickPlay.Font].GetTextSize(PopUp_QuickPlay.Caption).X + 40);
+  left := (PopUp_QuickPlay.ItemsPanel.Width - CTRLS_WIDTH) div 2;
     top := 15;
-    TKMLabel.Create(PopUp_QuickPlay, PopUp_QuickPlay.Width div 2, top, gResTexts[TX_MAPED_MAP_QUICK_PLAY_SEL_PLAYER], fntMetal, taCenter);
+    TKMLabel.Create(PopUp_QuickPlay.ItemsPanel, PopUp_QuickPlay.ItemsPanel.Width div 2, top, gResTexts[TX_MAPED_MAP_QUICK_PLAY_SEL_PLAYER], fntMetal, taCenter);
     Inc(top, 25);
 
-    DropList_SelectHand := TKMDropList.Create(PopUp_QuickPlay, left, top, CTRLS_WIDTH, 20, fntGame, '', bsGame);
+    DropList_SelectHand := TKMDropList.Create(PopUp_QuickPlay.ItemsPanel, left, top, CTRLS_WIDTH, 20, fntGame, '', bsGame);
     DropList_SelectHand.Hint := gResTexts[TX_MAPED_MAP_QUICK_PLAY_SEL_PLAYER_TO_START];
     Inc(top, 30);
 
-    TKMBevel.Create(PopUp_QuickPlay, left, top - 5, CTRLS_WIDTH, 70);
-    TKMLabel.Create(PopUp_QuickPlay, PopUp_QuickPlay.Width div 2, top, gResTexts[TX_AI_PLAYER_TYPE], fntOutline, taCenter);
+    TKMBevel.Create(PopUp_QuickPlay.ItemsPanel, left, top - 5, CTRLS_WIDTH, 70);
+    TKMLabel.Create(PopUp_QuickPlay.ItemsPanel, PopUp_QuickPlay.ItemsPanel.Width div 2, top, gResTexts[TX_AI_PLAYER_TYPE], fntOutline, taCenter);
     Inc(top, 20);
-    Radio_AIOpponents := TKMRadioGroup.Create(PopUp_QuickPlay, left + 5, top, CTRLS_WIDTH - 10, 40, fntMetal);
+    Radio_AIOpponents := TKMRadioGroup.Create(PopUp_QuickPlay.ItemsPanel, left + 5, top, CTRLS_WIDTH - 10, 40, fntMetal);
     Radio_AIOpponents.Add(gResTexts[TX_AI_PLAYER_CLASSIC]);
     Radio_AIOpponents.Add(gResTexts[TX_AI_PLAYER_ADVANCED]);
     Radio_AIOpponents.ItemIndex := 1;
 
     Inc(top, Radio_AIOpponents.Height);
-    Panel_Save := TKMPanel.Create(PopUp_QuickPlay, left, top, CTRLS_WIDTH, 230);
+    Panel_Save := TKMPanel.Create(PopUp_QuickPlay.ItemsPanel, left, top, CTRLS_WIDTH, 230);
 
     Inc(top, 215);
-    Button_QuickPlay := TKMButton.Create(PopUp_QuickPlay, left, top, CTRLS_WIDTH, 30, gResTexts[TX_MAPED_MAP_QUICK_PLAY_START_NO_SAVE], bsGame);
+    Button_QuickPlay := TKMButton.Create(PopUp_QuickPlay.ItemsPanel, left, top, CTRLS_WIDTH, 30, gResTexts[TX_MAPED_MAP_QUICK_PLAY_START_NO_SAVE], bsGame);
     Button_QuickPlay.Hint := gResTexts[TX_MAPED_MAP_QUICK_PLAY_START_NO_SAVE_HINT];
     Button_QuickPlay.OnClick := QuickPlay_Click;
 
     Inc(top, 45);
-    Label_Difficulty := TKMLabel.Create(PopUp_QuickPlay, left, top, gResTexts[TX_MISSION_DIFFICULTY], fntMetal, taLeft);
+    Label_Difficulty := TKMLabel.Create(PopUp_QuickPlay.ItemsPanel, left, top, gResTexts[TX_MISSION_DIFFICULTY], fntMetal, taLeft);
     Label_Difficulty.Anchors := [anLeft, anBottom];
     Inc(top, 20);
-    DropBox_Difficulty := TKMDropList.Create(PopUp_QuickPlay, left, top, CTRLS_WIDTH, 20, fntMetal, gResTexts[TX_MISSION_DIFFICULTY], bsMenu);
+    DropBox_Difficulty := TKMDropList.Create(PopUp_QuickPlay.ItemsPanel, left, top, CTRLS_WIDTH, 20, fntMetal, gResTexts[TX_MISSION_DIFFICULTY], bsMenu);
     DropBox_Difficulty.Anchors := [anLeft, anBottom];
 
-    Button_Cancel := TKMButton.Create(PopUp_QuickPlay, (PopUp_QuickPlay.Width - CTRLS_WIDTH) div 2, PopUp_QuickPlay.Height - 40,
+    Button_Cancel := TKMButton.Create(PopUp_QuickPlay.ItemsPanel, (PopUp_QuickPlay.ItemsPanel.Width - CTRLS_WIDTH) div 2, PopUp_QuickPlay.ItemsPanel.Height - 40,
                                       CTRLS_WIDTH, 30, gResTexts[TX_WORD_CANCEL], bsGame);
     Button_Cancel.Anchors := [anBottom];
     Button_Cancel.Hint := gResTexts[TX_WORD_CANCEL];

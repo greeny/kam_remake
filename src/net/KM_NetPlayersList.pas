@@ -312,6 +312,8 @@ end;
 
 function TKMNetPlayerInfo.GetNikname: AnsiString;
 begin
+  if Self = nil then Exit('');
+
   if IsHuman or (gHands = nil) or (HandIndex = -1) then
     Result := fNikname
   else
@@ -342,6 +344,8 @@ end;
 
 function TKMNetPlayerInfo.GetHandIndex: Integer;
 begin
+  if Self = nil then Exit(-1);
+  
   Result := -1;
   if StartLocation > 0 then
     Result := StartLocation - 1;
